@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF=8">
+<title>New ticket</title>
+</head>
+<body>
+<h1>Create ticket</h1>
+<form action="/create" method="POST">
+    <p>Ticket number: <input type="text" name="ticket"></p>
+    <p>UserID: <input type="text" name="userid"></p>
+    <p>
+        Issue:
+        <select name="type">
+            <option disabled selected value> -- select an option -- </option>
+            <option value="refund">Refund</option>
+            <option value="terminated">Billing Terminated</option>
+            <option value="dna_fp">DNA FP Reactivation</option>
+            <option value="extension">Billing Extension</option>
+        </select>
+    </p>
+    <p>Initials: <input type="text" name="initials"></p>
+    <p>Additional Comments: <input type="text" name="comments"></p>
+    <input type="submit" value="Submit">
+</form>
+</body>
+</html>
