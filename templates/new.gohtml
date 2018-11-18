@@ -7,11 +7,11 @@
 <body>
 <h1>Create ticket</h1>
 <form action="/create" method="POST">
-    <p>Ticket number: <input type="text" name="ticket"></p>
-    <p>UserID: <input type="text" name="userid"></p>
+    <p>ZenDesk Ticket Number: <input type="number" name="zdnum"></p>
+    <p>UserID: <input type="number" name="userid"></p>
     <p>
         Issue:
-        <select name="type">
+        <select name="issuetype">
             <option disabled selected value> -- select an option -- </option>
             <option value="refund">Refund</option>
             <option value="terminated">Billing Terminated</option>

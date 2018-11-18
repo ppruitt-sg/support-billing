@@ -1,11 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/schema"
 )
+
+type Ticket struct {
+	ZDNum     int    `schema:"zdnum"`
+	UserID    int    `schema:"userid"`
+	IssueType string `schema:"issuetype"`
+	Initials  string `schema:"initials"`
+	Comments  string `schema:"comments"`
+}
 
 var tpl *template.Template
 
@@ -19,14 +28,28 @@ func templateHandler(name string) func(http.ResponseWriter, *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
+
 	}
 }
 
 func createTicket(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		r.ParseForm()
-		for key, value := range r.Form {
-			fmt.Printf("%s = %s\n", key, value[0])
+		err := r.ParseForm()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		t := Ticket{}
+		decoder := schema.NewDecoder()
+
+		err = decoder.Decode(&t, r.PostForm)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = tpl.ExecuteTemplate(w, "submitted.gohtml", nil)
+		if err != nil {
+			log.Fatalln(err)
 		}
 	}
 }
@@ -36,5 +59,4 @@ func main() {
 	http.HandleFunc("/create", createTicket)
 
 	http.ListenAndServe(":8080", nil)
-
 }
