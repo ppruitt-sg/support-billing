@@ -13,23 +13,18 @@ import (
 )
 
 type Ticket struct {
-	Number    int64  `schema:"-"`
-	ZDNum     int    `schema:"zdnum"`
-	UserID    int    `schema:"userid"`
-	IssueType string `schema:"issuetype"`
-	Initials  string `schema:"initials"`
-	Comments  string `schema:"comments"`
+	Number    int64   `schema:"-"`
+	ZDNum     int     `schema:"zdnum"`
+	UserID    int     `schema:"userid"`
+	IssueType string  `schema:"issuetype"`
+	Initials  string  `schema:"initials"`
+	Comment   Comment `schema:"comment"`
 }
 
-/*type Comment struct {
+type Comment struct {
 	Timestamp int64
-	Text      string `schema:"comments"`
+	Text      string `schema:"text"`
 }
-
-type Form struct {
-	T Ticket
-	C Comment
-}*/
 
 var tpl *template.Template
 
@@ -79,7 +74,7 @@ func addToDB(t *Ticket) error {
 
 	query = `INSERT INTO comments (text, ticket_id)
 		VALUES (?, ?)`
-	_, err = db.Exec(query, t.Comments, t.Number)
+	_, err = db.Exec(query, t.Comment.Text, t.Number)
 	if err != nil {
 		return err
 	}
