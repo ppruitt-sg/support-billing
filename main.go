@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -46,35 +47,58 @@ func templateHandler(name string) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
+func parseForm(r *http.Request) (Ticket, error) {
+	err := r.ParseForm()
+	if err != nil {
+		return Ticket{}, err
+	}
+
+	t := Ticket{}
+	decoder := schema.NewDecoder()
+
+	err = decoder.Decode(&t, r.PostForm)
+	if err != nil {
+		return Ticket{}, err
+	}
+
+	return t, nil
+}
+
+func addToDB(t *Ticket) error {
+	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
+	defer db.Close()
+
+	query := `INSERT INTO tickets (zdticket, userid, issuetype, initials, solved)
+		VALUES (?, ?, ?, ?, 0);`
+	result, err := db.Exec(query, t.ZDNum, t.UserID, t.IssueType, t.Initials)
+	if err != nil {
+		return err
+	}
+	t.Number, err = result.LastInsertId()
+	fmt.Println(t.Number)
+
+	query = `INSERT INTO comments (text, ticket_id)
+		VALUES (?, ?)`
+	_, err = db.Exec(query, t.Comments, t.Number)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func createTicket(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		err := r.ParseForm()
+		// Decode form post to Ticket struct
+		t, err := parseForm(r)
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		t := Ticket{}
-		decoder := schema.NewDecoder()
-
-		err = decoder.Decode(&t, r.PostForm)
+		// Add to database
+		err = addToDB(&t)
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-		defer db.Close()
-
-		query := `INSERT INTO tickets (zdticket, userid, issuetype, initials, solved)
-		VALUES (?, ?, ?, ?, 0);`
-		result, err := db.Exec(query, t.ZDNum, t.UserID, t.IssueType, t.Initials)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		t.Number, err = result.LastInsertId()
-
-		query = `INSERT INTO comments (text, ticket_id)
-		VALUES (?, ?)`
-		result, err = db.Exec(query, t.Comments, t.Number)
+		// Display submitted text
 		err = tpl.ExecuteTemplate(w, "submitted.gohtml", t)
 		if err != nil {
 			log.Fatalln(err)
