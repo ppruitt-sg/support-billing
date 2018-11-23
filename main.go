@@ -2,11 +2,11 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/schema"
@@ -22,8 +22,9 @@ type Ticket struct {
 }
 
 type Comment struct {
-	Timestamp int64
-	Text      string `schema:"text"`
+	TicketNumber int64
+	Timestamp    int64
+	Text         string `schema:"text"`
 }
 
 var tpl *template.Template
@@ -55,11 +56,24 @@ func parseForm(r *http.Request) (Ticket, error) {
 	if err != nil {
 		return Ticket{}, err
 	}
+	t.Comment.Timestamp = time.Now().UTC().Unix()
 
 	return t, nil
 }
 
-func addToDB(t *Ticket) error {
+func addCommentToDB(c Comment) error {
+	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
+	defer db.Close()
+	query := `INSERT INTO comments (timestamp, text, ticket_id)
+		VALUES (?, ?, ?)`
+	_, err = db.Exec(query, c.Timestamp, c.Text, c.TicketNumber)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addTicketToDB(t *Ticket) error {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
 
@@ -69,15 +83,18 @@ func addToDB(t *Ticket) error {
 	if err != nil {
 		return err
 	}
-	t.Number, err = result.LastInsertId()
-	fmt.Println(t.Number)
 
-	query = `INSERT INTO comments (text, ticket_id)
-		VALUES (?, ?)`
-	_, err = db.Exec(query, t.Comment.Text, t.Number)
+	t.Number, err = result.LastInsertId()
 	if err != nil {
 		return err
 	}
+	t.Comment.TicketNumber = t.Number
+
+	err = addCommentToDB(t.Comment)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -89,7 +106,7 @@ func createTicket(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err)
 		}
 		// Add to database
-		err = addToDB(&t)
+		err = addTicketToDB(&t)
 		if err != nil {
 			log.Fatalln(err)
 		}
