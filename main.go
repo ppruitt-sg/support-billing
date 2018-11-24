@@ -2,8 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"./view"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/schema"
 )
@@ -31,15 +30,9 @@ type Comment struct {
 	TicketNumber int64
 }
 
-var tpl *template.Template
-
-func init() {
-	tpl = template.Must(template.ParseGlob("templates/*"))
-}
-
 func templateHandler(name string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := tpl.ExecuteTemplate(w, name+".gohtml", nil)
+		err := view.Render(w, name+".gohtml", nil)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -144,7 +137,6 @@ func getCommentFromDB(num int64) (Comment, error) {
 	if err != nil {
 		return Comment{}, err
 	}
-	fmt.Println(c.Text)
 
 	return c, nil
 }
@@ -162,7 +154,7 @@ func createTicket(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err)
 		}
 		// Display submitted text
-		err = tpl.ExecuteTemplate(w, "submitted.gohtml", t)
+		err = view.Render(w, "submitted.gohtml", t)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -175,7 +167,6 @@ func displayTicket() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ticketNumber, err := strconv.ParseInt(strings.Replace(r.URL.Path, "/view/", "", 1), 10, 64)
 		if err != nil {
-			fmt.Println(err.Error())
 			log.Fatalln(err)
 		}
 		t, err := getTicketFromDB(ticketNumber)
@@ -183,7 +174,7 @@ func displayTicket() func(http.ResponseWriter, *http.Request) {
 			log.Fatalln(err)
 		}
 
-		err = tpl.ExecuteTemplate(w, "viewticket.gohtml", t)
+		err = view.Render(w, "viewticket.gohtml", t)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -193,7 +184,7 @@ func displayTicket() func(http.ResponseWriter, *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/new", templateHandler("new"))
+	http.HandleFunc("/new/", templateHandler("new"))
 	http.HandleFunc("/create", createTicket)
 	http.HandleFunc("/view/", displayTicket())
 
