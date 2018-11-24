@@ -9,25 +9,21 @@ import (
 	"strings"
 	"time"
 
+	"./comment"
 	"./view"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/schema"
 )
 
 type Ticket struct {
-	Number    int64   `schema:"-"`
-	ZDNum     int     `schema:"zdnum"`
-	UserID    int     `schema:"userid"`
-	IssueType string  `schema:"issuetype"`
-	Initials  string  `schema:"initials"`
-	Solved    bool    `schema:"-"`
-	Comment   Comment `schema:"comment"`
-}
-
-type Comment struct {
-	Timestamp    time.Time
-	Text         string `schema:"text"`
-	TicketNumber int64
+	Number    int64           `schema:"-"`
+	ZDNum     int             `schema:"zdnum"`
+	UserID    int             `schema:"userid"`
+	IssueType string          `schema:"issuetype"`
+	Initials  string          `schema:"initials"`
+	Solved    bool            `schema:"-"`
+	Comment   comment.Comment `schema:"comment"`
 }
 
 func templateHandler(name string) func(http.ResponseWriter, *http.Request) {
@@ -57,19 +53,6 @@ func parseForm(r *http.Request) (Ticket, error) {
 
 	return t, nil
 }
-
-func addCommentToDB(c Comment) error {
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-	query := `INSERT INTO comments (timestamp, text, ticket_id)
-		VALUES (?, ?, ?)`
-	_, err = db.Exec(query, c.Timestamp.Unix(), c.Text, c.TicketNumber)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func addTicketToDB(t *Ticket) error {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
@@ -87,7 +70,7 @@ func addTicketToDB(t *Ticket) error {
 	}
 	t.Comment.TicketNumber = t.Number
 
-	err = addCommentToDB(t.Comment)
+	err = t.Comment.AddToDB()
 	if err != nil {
 		return err
 	}
@@ -111,34 +94,12 @@ func getTicketFromDB(num int64) (Ticket, error) {
 		return Ticket{}, err
 	}
 
-	t.Comment, err = getCommentFromDB(num)
+	t.Comment, err = comment.GetFromDB(num)
 	if err != nil {
 		return Ticket{}, err
 	}
 
 	return t, nil
-}
-
-func getCommentFromDB(num int64) (Comment, error) {
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-	if err != nil {
-		return Comment{}, err
-	}
-
-	query := `SELECT timestamp, text, ticket_id FROM comments
-		WHERE ticket_id=?`
-
-	r := db.QueryRow(query, num)
-	c := Comment{}
-	var ts int64
-	err = r.Scan(&ts, &c.Text, &c.TicketNumber)
-	c.Timestamp = time.Unix(ts, 0)
-	if err != nil {
-		return Comment{}, err
-	}
-
-	return c, nil
 }
 
 func createTicket(w http.ResponseWriter, r *http.Request) {
