@@ -10,7 +10,6 @@ var tpl *template.Template
 
 func init() {
 	pwd, _ := os.Getwd()
-
 	tpl = template.Must(template.ParseGlob(pwd + "/templates/*.gohtml"))
 }
 
