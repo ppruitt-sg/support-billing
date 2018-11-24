@@ -161,7 +161,11 @@ func createTicket(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), 301)
+		// Display submitted text
+		err = tpl.ExecuteTemplate(w, "submitted.gohtml", t)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	} else {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
