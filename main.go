@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -18,6 +17,21 @@ import (
 )
 
 type IssueType int
+
+func (i IssueType) ToString() string {
+	switch i {
+	case 0:
+		return "Refund"
+	case 1:
+		return "Billing Terminated"
+	case 2:
+		return "DNA FP"
+	case 3:
+		return "Extension"
+	default:
+		return ""
+	}
+}
 
 const (
 	Refund     IssueType = 0
@@ -60,7 +74,6 @@ func parseForm(r *http.Request) (Ticket, error) {
 		return Ticket{}, err
 	}
 	t.Comment.Timestamp = time.Now()
-	fmt.Println(t.Issue)
 
 	return t, nil
 }
