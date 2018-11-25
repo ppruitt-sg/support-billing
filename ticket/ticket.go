@@ -65,7 +65,7 @@ func parseForm(r *http.Request) (Ticket, error) {
 
 	return t, nil
 }
-func addTicketToDB(t *Ticket) error {
+func (t *Ticket) addToDB() error {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
 
@@ -90,7 +90,7 @@ func addTicketToDB(t *Ticket) error {
 	return nil
 }
 
-func getTicketFromDB(num int64) (Ticket, error) {
+func getFromDB(num int64) (Ticket, error) {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
 	if err != nil {
@@ -114,7 +114,7 @@ func getTicketFromDB(num int64) (Ticket, error) {
 	return t, nil
 }
 
-func CreateTicket(w http.ResponseWriter, r *http.Request) {
+func Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		// Decode form post to Ticket struct
 		t, err := parseForm(r)
@@ -122,7 +122,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err)
 		}
 		// Add to database
-		err = addTicketToDB(&t)
+		err = t.addToDB()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -136,13 +136,13 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func DisplayTicket() func(http.ResponseWriter, *http.Request) {
+func Display() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ticketNumber, err := strconv.ParseInt(strings.Replace(r.URL.Path, "/view/", "", 1), 10, 64)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		t, err := getTicketFromDB(ticketNumber)
+		t, err := getFromDB(ticketNumber)
 		if err != nil {
 			log.Fatalln(err)
 		}

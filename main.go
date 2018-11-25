@@ -21,8 +21,8 @@ func templateHandler(name string) func(http.ResponseWriter, *http.Request) {
 
 func main() {
 	http.HandleFunc("/new/", templateHandler("new"))
-	http.HandleFunc("/create", ticket.CreateTicket)
-	http.HandleFunc("/view/", ticket.DisplayTicket())
+	http.HandleFunc("/create", ticket.Create)
+	http.HandleFunc("/view/", ticket.Display())
 
 	http.ListenAndServe(":8080", nil)
 }
