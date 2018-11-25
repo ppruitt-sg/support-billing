@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -16,14 +17,23 @@ import (
 	"github.com/gorilla/schema"
 )
 
+type IssueType int
+
+const (
+	Refund     IssueType = 0
+	Terminated IssueType = 1
+	DNAFP      IssueType = 2
+	Extension  IssueType = 3
+)
+
 type Ticket struct {
-	Number    int64           `schema:"-"`
-	ZDNum     int             `schema:"zdnum"`
-	UserID    int             `schema:"userid"`
-	IssueType string          `schema:"issuetype"`
-	Initials  string          `schema:"initials"`
-	Solved    bool            `schema:"-"`
-	Comment   comment.Comment `schema:"comment"`
+	Number   int64           `schema:"-"`
+	ZDNum    int             `schema:"zdnum"`
+	UserID   int             `schema:"userid"`
+	Issue    IssueType       `schema:"issue"`
+	Initials string          `schema:"initials"`
+	Solved   bool            `schema:"-"`
+	Comment  comment.Comment `schema:"comment"`
 }
 
 func templateHandler(name string) func(http.ResponseWriter, *http.Request) {
@@ -50,6 +60,7 @@ func parseForm(r *http.Request) (Ticket, error) {
 		return Ticket{}, err
 	}
 	t.Comment.Timestamp = time.Now()
+	fmt.Println(t.Issue)
 
 	return t, nil
 }
@@ -57,9 +68,9 @@ func addTicketToDB(t *Ticket) error {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
 
-	query := `INSERT INTO tickets (zdticket, userid, issuetype, initials, solved)
+	query := `INSERT INTO tickets (zdticket, userid, issue, initials, solved)
 		VALUES (?, ?, ?, ?, 0);`
-	result, err := db.Exec(query, t.ZDNum, t.UserID, t.IssueType, t.Initials)
+	result, err := db.Exec(query, t.ZDNum, t.UserID, t.Issue, t.Initials)
 	if err != nil {
 		return err
 	}
@@ -85,11 +96,11 @@ func getTicketFromDB(num int64) (Ticket, error) {
 		return Ticket{}, err
 	}
 
-	query := `SELECT ticket_id, zdticket, userid, issuetype, initials, solved FROM tickets
+	query := `SELECT ticket_id, zdticket, userid, issue, initials, solved FROM tickets
 		WHERE ticket_id=?`
 	r := db.QueryRow(query, num)
 	t := Ticket{}
-	err = r.Scan(&t.Number, &t.ZDNum, &t.UserID, &t.IssueType, &t.Initials, &t.Solved)
+	err = r.Scan(&t.Number, &t.ZDNum, &t.UserID, &t.Issue, &t.Initials, &t.Solved)
 	if err != nil {
 		return Ticket{}, err
 	}
