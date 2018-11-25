@@ -2,7 +2,6 @@ package comment
 
 import (
 	"database/sql"
-	"fmt"
 	"os"
 	"time"
 )
@@ -42,7 +41,6 @@ func GetFromDB(num int64) (c Comment, err error) {
 	if err != nil {
 		return c, err
 	}
-	fmt.Println("Made it")
 
 	return c, nil
 }
