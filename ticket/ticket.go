@@ -89,19 +89,6 @@ func (t *Ticket) addToDB() error {
 	return nil
 }
 
-func Test() error {
-	t, err := getFromDB(1)
-	if err != nil {
-		return err
-	}
-	t.Solved = true
-	err = t.updateToDB()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func getFromDB(num int64) (Ticket, error) {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
