@@ -75,7 +75,6 @@ func (t *Ticket) addToDB() error {
 	if err != nil {
 		return err
 	}
-
 	t.Number, err = result.LastInsertId()
 	if err != nil {
 		return err
@@ -87,6 +86,19 @@ func (t *Ticket) addToDB() error {
 		return err
 	}
 
+	return nil
+}
+
+func Test() error {
+	t, err := getFromDB(1)
+	if err != nil {
+		return err
+	}
+	t.Solved = true
+	err = t.updateToDB()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -114,6 +126,26 @@ func getFromDB(num int64) (Ticket, error) {
 	return t, nil
 }
 
+func (t Ticket) updateToDB() error {
+	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
+	defer db.Close()
+	if err != nil {
+		return err
+	}
+
+	query := `UPDATE tickets
+		SET solved=?
+		WHERE ticket_id=?`
+
+	_, err = db.Exec(query, t.Solved, t.Number)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 func Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		// Decode form post to Ticket struct
@@ -136,22 +168,53 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func parseIntFromURL(path string, r *http.Request) (int64, error) {
+	return strconv.ParseInt(strings.Replace(r.URL.Path, path, "", 1), 10, 64)
+}
+
 func Display() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ticketNumber, err := strconv.ParseInt(strings.Replace(r.URL.Path, "/view/", "", 1), 10, 64)
+		ticketNumber, err := parseIntFromURL("/view/", r)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		t, err := getFromDB(ticketNumber)
 		if err != nil {
-			log.Fatalln(err)
+			switch err {
+			case sql.ErrNoRows:
+				w.WriteHeader(http.StatusNotFound)
+				return
+			default:
+				log.Fatalln(err)
+			}
 		}
 
 		err = view.Render(w, "viewticket.gohtml", t)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		// If not return 404
 	}
 
+}
+
+func Solve(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		ticketNumber, err := parseIntFromURL("/solve/", r)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		t, err := getFromDB(ticketNumber)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		t.Solved = true
+		err = t.updateToDB()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusPermanentRedirect)
+	} else {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }

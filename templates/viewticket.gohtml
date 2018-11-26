@@ -7,11 +7,16 @@
 <body>
 <h1>Ticket {{.Number}}</h1>
 <p>Submitted on {{.Comment.Timestamp.Format "January 02 2006 3:04pm MST"}}
-<p>Userid: {{.UserID}}</p>
-<p>Zendesk Ticket: {{.ZDNum}}</p>
+<p>UserID: <a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></p>
+<p>Zendesk Ticket: <a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDNum}}" target="_blank">{{.ZDNum}}</a></p>
 <p>Issue Type: {{.Issue.ToString}}</p>
 <p>Initials: {{.Initials}}</p>
 <p>Solved: {{.Solved}}</p>
 <p>Additional info: {{.Comment.Text}}
+{{if (eq .Solved  false)}}
+    <form action="/solve/{{.Number}}" method="post">
+    <button name="solve" type="submit" value="solve">Solve</button>
+    </form>
+{{end}}
 </body>
 </html>
