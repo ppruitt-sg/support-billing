@@ -11,6 +11,8 @@ import (
 func main() {
 	http.HandleFunc("/new/", view.TemplateHandler("new"))
 	http.HandleFunc("/create", ticket.Create)
+	http.HandleFunc("/view/all", ticket.DisplayAll)
+	http.HandleFunc("/view/open/", ticket.DisplayNext5())
 	http.HandleFunc("/view/", ticket.Display())
 	http.HandleFunc("/solve/", ticket.Solve)
 

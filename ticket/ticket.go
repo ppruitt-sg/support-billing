@@ -48,6 +48,12 @@ type Ticket struct {
 	Comment  comment.Comment `schema:"comment"`
 }
 
+type Tickets struct {
+	Tickets    []Ticket
+	NextButton bool
+	LastTicket int64
+}
+
 func parseForm(r *http.Request) (Ticket, error) {
 	err := r.ParseForm()
 	if err != nil {
@@ -111,6 +117,91 @@ func getFromDB(num int64) (Ticket, error) {
 	}
 
 	return t, nil
+}
+
+func getNext5FromDB(lastTicket int64) ([]Ticket, error) {
+	var ts []Ticket
+	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
+	defer db.Close()
+	if err != nil {
+		return ts, err
+	}
+
+	// Select rows with limit
+	query := `SELECT SQL_CALC_FOUND_ROWS ticket_id, zdticket, userid, issue, initials, solved 
+		FROM tickets 
+		WHERE solved=0 AND ticket_id>?
+		LIMIT 5`
+	r, err := db.Query(query, lastTicket)
+	if err != nil {
+		return ts, err
+	}
+
+	t := Ticket{}
+	for r.Next() {
+		err = r.Scan(&t.Number, &t.ZDNum, &t.UserID, &t.Issue, &t.Initials, &t.Solved)
+		if err != nil {
+			return ts, err
+		}
+		ts = append(ts, t)
+	}
+	if r.Err() != nil {
+		return ts, err
+	}
+
+	return ts, nil
+}
+
+func findRowsFound(lastTicket int64) (int64, error) {
+	var rowsFound int64
+
+	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
+	defer db.Close()
+	if err != nil {
+		return rowsFound, err
+	}
+
+	query := `SELECT COUNT(*) 
+		FROM tickets 
+		WHERE solved=0 AND ticket_id>?`
+	count := db.QueryRow(query, lastTicket)
+
+	err = count.Scan(&rowsFound)
+	if err != nil {
+		return rowsFound, err
+	}
+
+	return rowsFound, nil
+}
+
+func DisplayNext5() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var lastTicket int64
+		var ts Tickets
+		keys, _ := r.URL.Query()["last_ticket"]
+
+		lastTicket, err := strconv.ParseInt(keys[0], 10, 64)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		ts.Tickets, err = getNext5FromDB(lastTicket)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		ts.LastTicket = ts.Tickets[len(ts.Tickets)-1].Number
+
+		rowsFound, err := findRowsFound(lastTicket)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if rowsFound > 5 {
+			ts.NextButton = true
+		}
+
+		view.Render(w, "listtickets.gohtml", ts)
+	}
 }
 
 func (t Ticket) updateToDB() error {
@@ -182,6 +273,42 @@ func Display() func(http.ResponseWriter, *http.Request) {
 		}
 	}
 
+}
+
+func getAllFromDB() ([]Ticket, error) {
+	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
+	defer db.Close()
+	var ts []Ticket
+	if err != nil {
+		return []Ticket{}, err
+	}
+
+	query := `SELECT ticket_id, zdticket, userid, issue, initials, solved FROM tickets`
+	r, err := db.Query(query)
+	if err != nil {
+		return ts, err
+	}
+	t := Ticket{}
+	for r.Next() {
+		err = r.Scan(&t.Number, &t.ZDNum, &t.UserID, &t.Issue, &t.Initials, &t.Solved)
+		if err != nil {
+			return ts, err
+		}
+		ts = append(ts, t)
+	}
+	if r.Err() != nil {
+		return ts, r.Err()
+	}
+
+	return ts, nil
+}
+
+func DisplayAll(w http.ResponseWriter, r *http.Request) {
+	var ts, err = getAllFromDB()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	view.Render(w, "listtickets.gohtml", ts)
 }
 
 func Solve(w http.ResponseWriter, r *http.Request) {
