@@ -71,6 +71,7 @@ func parseForm(r *http.Request) (Ticket, error) {
 
 	return t, nil
 }
+
 func (t *Ticket) addToDB() error {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
@@ -128,7 +129,7 @@ func getNext5FromDB(lastTicket int64) ([]Ticket, error) {
 	}
 
 	// Select rows with limit
-	query := `SELECT SQL_CALC_FOUND_ROWS ticket_id, zdticket, userid, issue, initials, solved 
+	query := `SELECT ticket_id, zdticket, userid, issue, initials, solved 
 		FROM tickets 
 		WHERE solved=0 AND ticket_id>?
 		LIMIT 5`
@@ -148,7 +149,6 @@ func getNext5FromDB(lastTicket int64) ([]Ticket, error) {
 	if r.Err() != nil {
 		return ts, err
 	}
-
 	return ts, nil
 }
 
@@ -178,18 +178,21 @@ func DisplayNext5() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var lastTicket int64
 		var ts Tickets
-		keys, _ := r.URL.Query()["last_ticket"]
-
-		lastTicket, err := strconv.ParseInt(keys[0], 10, 64)
-		if err != nil {
-			log.Fatalln(err)
+		var err error
+		if keys, ok := r.URL.Query()["last_ticket"]; ok {
+			lastTicket, err = strconv.ParseInt(keys[0], 10, 64)
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 		ts.Tickets, err = getNext5FromDB(lastTicket)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		ts.LastTicket = ts.Tickets[len(ts.Tickets)-1].Number
+		if len(ts.Tickets) > 0 {
+			ts.LastTicket = ts.Tickets[len(ts.Tickets)-1].Number
+		}
 
 		rowsFound, err := findRowsFound(lastTicket)
 		if err != nil {
@@ -199,7 +202,6 @@ func DisplayNext5() func(http.ResponseWriter, *http.Request) {
 		if rowsFound > 5 {
 			ts.NextButton = true
 		}
-
 		view.Render(w, "listtickets.gohtml", ts)
 	}
 }

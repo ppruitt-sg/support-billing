@@ -37,10 +37,11 @@ func GetFromDB(num int64) (c Comment, err error) {
 	r := db.QueryRow(query, num)
 	var ts int64
 	err = r.Scan(&ts, &c.Text, &c.TicketNumber)
-	c.Timestamp = time.Unix(ts, 0)
 	if err != nil {
 		return c, err
 	}
+
+	c.Timestamp = time.Unix(ts, 0)
 
 	return c, nil
 }
