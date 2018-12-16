@@ -24,11 +24,11 @@ func (c Comment) AddToDB() error {
 	return nil
 }
 
-func GetFromDB(num int64) (c Comment, err error) {
+func (c *Comment) GetFromDB(num int64) (err error) {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
 	if err != nil {
-		return c, err
+		return err
 	}
 
 	query := `SELECT timestamp, text, ticket_id FROM comments
@@ -38,10 +38,10 @@ func GetFromDB(num int64) (c Comment, err error) {
 	var ts int64
 	err = r.Scan(&ts, &c.Text, &c.TicketNumber)
 	if err != nil {
-		return c, err
+		return err
 	}
 
 	c.Timestamp = time.Unix(ts, 0)
 
-	return c, nil
+	return nil
 }

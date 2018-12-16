@@ -112,7 +112,7 @@ func getFromDB(num int64) (Ticket, error) {
 		return Ticket{}, err
 	}
 
-	t.Comment, err = comment.GetFromDB(num)
+	err = t.Comment.GetFromDB(num)
 	if err != nil {
 		return Ticket{}, err
 	}
