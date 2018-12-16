@@ -14,30 +14,6 @@ import (
 	"github.com/gorilla/schema"
 )
 
-type IssueType int
-
-func (i IssueType) ToString() string {
-	switch i {
-	case 0:
-		return "Refund"
-	case 1:
-		return "Billing Terminated"
-	case 2:
-		return "DNA FP"
-	case 3:
-		return "Extension"
-	default:
-		return ""
-	}
-}
-
-const (
-	Refund     IssueType = 0
-	Terminated IssueType = 1
-	DNAFP      IssueType = 2
-	Extension  IssueType = 3
-)
-
 type Ticket struct {
 	Number   int64           `schema:"-"`
 	ZDNum    int             `schema:"zdnum"`
@@ -152,7 +128,7 @@ func getNext5FromDB(lastTicket int64) ([]Ticket, error) {
 	return ts, nil
 }
 
-func findRowsFound(lastTicket int64) (int64, error) {
+func getRowsFound(lastTicket int64) (int64, error) {
 	var rowsFound int64
 
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
@@ -194,7 +170,7 @@ func DisplayNext5() func(http.ResponseWriter, *http.Request) {
 			ts.LastTicket = ts.Tickets[len(ts.Tickets)-1].Number
 		}
 
-		rowsFound, err := findRowsFound(lastTicket)
+		rowsFound, err := getRowsFound(lastTicket)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -214,10 +190,14 @@ func (t Ticket) updateToDB() error {
 	}
 
 	query := `UPDATE tickets
-		SET solved=?
+		SET zdticket=?,
+		userid=?,
+		issue=?,
+		initials=?,
+		solved=?
 		WHERE ticket_id=?`
 
-	_, err = db.Exec(query, t.Solved, t.Number)
+	_, err = db.Exec(query, t.ZDNum, t.UserID, t.Issue, t.Initials, t.Solved, t.Number)
 	if err != nil {
 		return err
 	}
