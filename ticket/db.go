@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func getAllFromDB() ([]Ticket, error) {
+/* func getAllFromDB() ([]Ticket, error) {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
 	var ts []Ticket
@@ -31,7 +31,7 @@ func getAllFromDB() ([]Ticket, error) {
 	}
 
 	return ts, nil
-}
+} */
 
 func (t Ticket) updateToDB() error {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
@@ -105,7 +105,7 @@ func getFromDB(num int64) (Ticket, error) {
 	return t, nil
 }
 
-func getNext5FromDB(lastTicket int64) ([]Ticket, error) {
+func getNext5FromDB(lastTicket int64, solved bool) ([]Ticket, error) {
 	var ts []Ticket
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
@@ -116,9 +116,9 @@ func getNext5FromDB(lastTicket int64) ([]Ticket, error) {
 	// Select rows with limit
 	query := `SELECT ticket_id, zdticket, userid, issue, initials, solved 
 		FROM tickets 
-		WHERE solved=0 AND ticket_id>?
+		WHERE ticket_id>? AND solved=?
 		LIMIT 5`
-	r, err := db.Query(query, lastTicket)
+	r, err := db.Query(query, lastTicket, solved)
 	if err != nil {
 		return ts, err
 	}
@@ -137,7 +137,7 @@ func getNext5FromDB(lastTicket int64) ([]Ticket, error) {
 	return ts, nil
 }
 
-func getRowsFound(lastTicket int64) (int64, error) {
+func getRowsFound(lastTicket int64, solved bool) (int64, error) {
 	var rowsFound int64
 
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
@@ -148,8 +148,8 @@ func getRowsFound(lastTicket int64) (int64, error) {
 
 	query := `SELECT COUNT(*) 
 		FROM tickets 
-		WHERE solved=0 AND ticket_id>?`
-	count := db.QueryRow(query, lastTicket)
+		WHERE ticket_id>? AND solved=?`
+	count := db.QueryRow(query, lastTicket, solved)
 
 	err = count.Scan(&rowsFound)
 	if err != nil {

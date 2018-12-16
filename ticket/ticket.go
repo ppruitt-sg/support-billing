@@ -47,7 +47,7 @@ func parseForm(r *http.Request) (Ticket, error) {
 	return t, nil
 }
 
-func DisplayNext5() func(http.ResponseWriter, *http.Request) {
+func DisplayNext5(solved bool) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var lastTicket int64
 		var ts Tickets
@@ -59,7 +59,7 @@ func DisplayNext5() func(http.ResponseWriter, *http.Request) {
 			}
 		}
 
-		ts.Tickets, err = getNext5FromDB(lastTicket)
+		ts.Tickets, err = getNext5FromDB(lastTicket, solved)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -67,7 +67,7 @@ func DisplayNext5() func(http.ResponseWriter, *http.Request) {
 			ts.LastTicket = ts.Tickets[len(ts.Tickets)-1].Number
 		}
 
-		rowsFound, err := getRowsFound(lastTicket)
+		rowsFound, err := getRowsFound(lastTicket, solved)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -130,13 +130,13 @@ func Display() func(http.ResponseWriter, *http.Request) {
 
 }
 
-func DisplayAll(w http.ResponseWriter, r *http.Request) {
+/* func DisplayAll(w http.ResponseWriter, r *http.Request) {
 	var ts, err = getAllFromDB()
 	if err != nil {
 		log.Fatalln(err)
 	}
 	view.Render(w, "listtickets.gohtml", ts)
-}
+} */
 
 func Solve(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
