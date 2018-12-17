@@ -29,13 +29,12 @@ type Tickets struct {
 	LastTicket int64
 }
 
-func parseForm(r *http.Request) (Ticket, error) {
-	err := r.ParseForm()
+func parseNewForm(r *http.Request) (t Ticket, err error) {
+	err = r.ParseForm()
 	if err != nil {
 		return Ticket{}, err
 	}
 
-	t := Ticket{}
 	decoder := schema.NewDecoder()
 
 	err = decoder.Decode(&t, r.PostForm)
@@ -45,6 +44,22 @@ func parseForm(r *http.Request) (Ticket, error) {
 	t.Comment.Timestamp = time.Now()
 
 	return t, nil
+}
+
+func parseSearchForm(r *http.Request) (t int, err error) {
+	err = r.ParseForm()
+	if err != nil {
+		return t, err
+	}
+
+	decoder := schema.NewDecoder()
+
+	err = decoder.Decode(&t, r.PostForm)
+	if err != nil {
+		return t, err
+	}
+
+	return t, err
 }
 
 func DisplayNext5(solved bool) func(http.ResponseWriter, *http.Request) {
@@ -82,7 +97,7 @@ func DisplayNext5(solved bool) func(http.ResponseWriter, *http.Request) {
 func Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		// Decode form post to Ticket struct
-		t, err := parseForm(r)
+		t, err := parseNewForm(r)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -107,9 +122,18 @@ func parseIntFromURL(path string, r *http.Request) (int64, error) {
 
 func Display() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ticketNumber, err := parseIntFromURL("/view/", r)
-		if err != nil {
-			log.Fatalln(err)
+		var ticketNumber int64
+		var err error
+		switch r.Method {
+		case "GET":
+			ticketNumber, err = parseIntFromURL("/view/", r)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		case "POST":
+			r.ParseForm()
+			http.Redirect(w, r, r.Form["number"][0], 301)
+			return
 		}
 		t, err := getFromDB(ticketNumber)
 		if err != nil {

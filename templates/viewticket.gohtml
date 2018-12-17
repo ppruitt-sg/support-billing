@@ -5,6 +5,7 @@
 <title>View Ticket</title>
 </head>
 <body>
+{{template "header"}}
 <h1>Ticket {{.Number}}</h1>
 <p>Submitted on {{.Comment.Timestamp.Format "January 02 2006 3:04pm MST"}}
 <p>UserID: <a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></p>
