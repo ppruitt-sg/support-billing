@@ -132,7 +132,7 @@ func Display() func(http.ResponseWriter, *http.Request) {
 			}
 		case "POST":
 			r.ParseForm()
-			http.Redirect(w, r, r.Form["number"][0], 301)
+			http.Redirect(w, r, r.Form["number"][0], http.StatusMovedPermanently)
 			return
 		}
 		t, err := getFromDB(ticketNumber)
@@ -178,7 +178,7 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusPermanentRedirect)
+		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
 	} else {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
