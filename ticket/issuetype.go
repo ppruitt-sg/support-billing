@@ -7,6 +7,7 @@ const (
 	Terminated IssueType = 1
 	DNAFP      IssueType = 2
 	Extension  IssueType = 3
+	MCContacts IssueType = 4
 )
 
 func (i IssueType) ToString() string {
@@ -19,6 +20,8 @@ func (i IssueType) ToString() string {
 		return "DNA FP"
 	case 3:
 		return "Extension"
+	case 4:
+		return "MC Contacts"
 	default:
 		return ""
 	}
