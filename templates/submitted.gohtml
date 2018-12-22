@@ -2,13 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF=8">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide.css" rel="stylesheet">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide-grid.css" rel="stylesheet">
 <title>Ticket Submitted</title>
 </head>
 <body>
 {{template "header"}}
-<h1>Ticket Submitted</h1>
-<p>Your ticket has been submitted!</p>
-<p>Your ticket number is {{.Number}}</p>
-<p><a href="/view/{{.Number}}">Click here to view the ticket</a></p>
+<div class="row">
+    <div class="col-6 col-start-4">
+        <div class="card is-centered">
+            <h1>Ticket Submitted</h1>
+            <p>
+            <p>Your ticket has been submitted! The ticket number is {{.Number}}</p>
+            <p>To view the ticket, <a href="/view/{{.Number}}">click here.</a></p>
+        </div>
+    </div>
+</div>
 </body>
 </html>

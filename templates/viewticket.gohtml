@@ -2,22 +2,55 @@
 <html lang="en">
 <head>
 <meta charset="UTF=8">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide.css" rel="stylesheet">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide-grid.css" rel="stylesheet">
 <title>View Ticket</title>
 </head>
 <body>
 {{template "header"}}
-<h1>Ticket {{.Number}}</h1>
-<p>Submitted on {{.Comment.Timestamp.Format "January 02 2006 3:04pm MST"}}
-<p>UserID: <a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></p>
-<p>Zendesk Ticket: <a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDNum}}" target="_blank">{{.ZDNum}}</a></p>
-<p>Issue Type: {{.Issue.ToString}}</p>
-<p>Initials: {{.Initials}}</p>
-<p>Solved: {{.Solved}}</p>
-<p>Additional info: {{.Comment.Text}}
-{{if (eq .Solved  false)}}
-    <form action="/solve/{{.Number}}" method="post">
-    <button name="solve" type="submit" value="solve">Solve</button>
-    </form>
-{{end}}
+<div class="row">
+    <div class="col-8 col-start-2">
+        <h1>Ticket {{.Number}}</h1>
+        <table class="table-wrap is-auto-width">
+            <tr>
+                <td><strong>Submitted</strong></td>
+                <td><span class="mono">{{.Comment.Timestamp.Format "January 02 2006 3:04pm MST"}}</span></td>
+            </tr>
+            <tr>
+                <td><strong>UserID</strong></td>
+                <td><span class="mono"><a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></span></td>
+            </tr>
+            <tr>
+                <td><strong>Zendesk Ticket</strong></td>
+                <td><span class="mono"><a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDNum}}" target="_blank">{{.ZDNum}}</a></span></td>
+            </tr>
+            <tr>
+                <td><strong>Issue Type</strong></td>
+                <td><span class="mono">{{.Issue.ToString}}</span></td>
+            </tr>
+            <tr>
+                <td><strong>Initials</strong></td>
+                <td><span class="mono">{{.Initials}}</span></td>
+            </tr>
+            <tr>
+                <td><strong>Solved</strong></td>
+                <td><span class="mono">{{.Solved}}</span></td>
+            </tr>
+            <tr>
+                <td><strong>Additional Comments</strong></td>
+                <td><span class="mono">{{.Comment.Text}}</span></td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="row">
+    <div class="col-1 col-start-2">
+    {{if (eq .Solved  false)}}
+        <form action="/solve/{{.Number}}" method="post">
+        <button class="btn btn-primary" name="solve" type="submit" value="solve">Solve</button>
+        </form>
+    {{end}}
+    </div>
+</div>
 </body>
 </html>

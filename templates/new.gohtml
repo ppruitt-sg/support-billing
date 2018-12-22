@@ -2,28 +2,62 @@
 <html lang="en">
 <head>
 <meta charset="UTF=8">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide.css" rel="stylesheet">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide-grid.css" rel="stylesheet">
 <title>New ticket</title>
 </head>
 <body>
-{{template "header"}}
-<h1>New ticket</h1>
-<form action="/create" method="POST">
-    <p>ZenDesk Ticket Number: <input type="number" name="zdnum"></p>
-    <p>UserID: <input type="number" name="userid"></p>
-    <p>
-        Issue:
-        <select name="issue">
-            <option disabled selected value> -- select an option -- </option>
-            <option value="0">Refund</option>
-            <option value="1">Billing Terminated</option>
-            <option value="2">DNA FP Reactivation</option>
-            <option value="3">Billing Extension</option>
-            <option value="4">MC Contacts</option>
-        </select>
-    </p>
-    <p>Initials: <input type="text" name="initials"></p>
-    <p>Additional Comments: <input type="text" name="comment.text"></p>
-    <input type="submit" value="Submit">
-</form>
+<div class="body">
+    {{template "header"}}
+    <div class="row">
+        <div class="col-5 col-start-2">
+            <h1>New ticket</h1>
+        </div>
+    </div>
+    <form action="/create" method="POST">
+    <div class="row">
+        <div class="input-text-wrap is-required is-focused col-2 col-start-2">
+            <label class="input-text-label" for="zdnum-input">Zendesk Ticket</label>
+            <input type="number" name="zdnum" id="zdnum-input">
+        </div>
+    </div>
+    <div class="row">
+        <div class="input-text-wrap is-required is-focused col-2 col-start-2">
+            <label class="input-text-label" for="userid-input">UserID</label>
+            <input type="number" name="userid" id="userid-input">
+        </div>
+    </div>
+    <div class="row">
+        <div class="input-select-wrap is-required col-2 col-start-2">
+            <label class="input-select-label" for="issue-input">Issue</label>
+            <div class="input-select">
+                <select id="issue-input" name="issue">
+                    <option selected="true">Select an issue</option>
+                    <option value="0">Refund</option>
+                    <option value="1">Billing Terminated</option>
+                    <option value="2">DNA FP Reactivation</option>
+                    <option value="3">Billing Extension</option>
+                    <option value="4">MC Contacts</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="input-text-wrap is-required is-focused col-2 col-start-2">
+            <label class="input-text-label">Initials</label>
+            <input type="text" name="initials">
+        </div>
+    </div>
+    <div class="row">
+        <div class="textarea-wrap is-focused is-scrollable col-6 col-start-2">
+            <label class="textarea-label" for="comment-input">Additional Comments</label>
+            <textarea class="textarea-input" style="height: 75px;" rows="3" id="comment-input" name="comment.text"></textarea>
+        </div>
+    </div>
+    <div class="row">
+        <input class="btn btn-primary col-1 col-start-2" type="submit" value="Submit">
+    </div>
+    </form>
+</div>
 </body>
 </html>

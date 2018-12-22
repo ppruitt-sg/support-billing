@@ -2,30 +2,38 @@
 <html lang="en">
 <head>
 <meta charset="UTF=8">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide.css" rel="stylesheet">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide-grid.css" rel="stylesheet">
 <title>View Tickets</title>
 </head>
 <body>
 {{template "header"}}
-<table>
-  <tr>
-    <th>Ticket Number</th>
-    <th>UserID</th>
-    <th>ZenDesk Ticket</th> 
-    <th>Issue Type</th>
-    <th>Solved</th>
-  </tr>
-  {{range .Tickets}}
-  <tr>
-    <td><a href="/view/{{.Number}}">{{.Number}}</td>
-    <td><a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></td> 
-    <td><a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDNum}}" target="_blank">{{.ZDNum}}</a></td>
-    <td>{{.Issue.ToString}}</td>
-    <td>{{.Solved}}</td>
-  </tr>
-  {{end}}
-</table>
-{{ if .NextButton}}
- <a href="/view/open?last_ticket={{.LastTicket}}">NEXT</a>
-{{end}}
+<div class="row">
+  <div class="col-8 col-start-2">
+    <table class="table-wrap">
+      <thead>
+        <tr>
+          <th>Ticket Number</th>
+          <th>UserID</th>
+          <th>ZenDesk Ticket</th> 
+          <th>Issue Type</th>
+          <th>Solved</th>
+        </tr>
+      </thead>
+      {{range .Tickets}}
+      <tr>
+        <td><a href="/view/{{.Number}}">{{.Number}}</td>
+        <td><a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></td> 
+        <td><a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDNum}}" target="_blank">{{.ZDNum}}</a></td>
+        <td>{{.Issue.ToString}}</td>
+        <td>{{.Solved}}</td>
+      </tr>
+      {{end}}
+    </table>
+    {{ if .NextButton}}
+    <a class="btn btn-small btn-secondary" href="/view/open?last_ticket={{.LastTicket}}">Next</a>
+    {{end}}
+  </div>
+</div>
 </body>
 </html>
