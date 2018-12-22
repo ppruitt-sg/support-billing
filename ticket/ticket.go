@@ -154,14 +154,6 @@ func Display() func(http.ResponseWriter, *http.Request) {
 
 }
 
-/* func DisplayAll(w http.ResponseWriter, r *http.Request) {
-	var ts, err = getAllFromDB()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	view.Render(w, "listtickets.gohtml", ts)
-} */
-
 func Solve(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		ticketNumber, err := parseIntFromURL("/solve/", r)

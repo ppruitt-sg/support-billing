@@ -5,34 +5,6 @@ import (
 	"os"
 )
 
-/* func getAllFromDB() ([]Ticket, error) {
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-	var ts []Ticket
-	if err != nil {
-		return []Ticket{}, err
-	}
-
-	query := `SELECT ticket_id, zdticket, userid, issue, initials, solved FROM tickets`
-	r, err := db.Query(query)
-	if err != nil {
-		return ts, err
-	}
-	t := Ticket{}
-	for r.Next() {
-		err = r.Scan(&t.Number, &t.ZDNum, &t.UserID, &t.Issue, &t.Initials, &t.Solved)
-		if err != nil {
-			return ts, err
-		}
-		ts = append(ts, t)
-	}
-	if r.Err() != nil {
-		return ts, r.Err()
-	}
-
-	return ts, nil
-} */
-
 func (t Ticket) updateToDB() error {
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
