@@ -67,6 +67,7 @@ func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var lastTicket int64
 		var ts Tickets
+		ts.Status = status
 		var err error
 		if keys, ok := r.URL.Query()["last_ticket"]; ok {
 			lastTicket, err = strconv.ParseInt(keys[0], 10, 64)
@@ -82,7 +83,6 @@ func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
 		if len(ts.Tickets) > 0 {
 			ts.LastTicket = ts.Tickets[len(ts.Tickets)-1].Number
 		}
-		ts.Status = status
 
 		rowsFound, err := getRowsFound(lastTicket, status)
 		if err != nil {

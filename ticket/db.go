@@ -1,17 +1,10 @@
 package ticket
 
 import (
-	"database/sql"
-	"os"
+	"../database"
 )
 
 func (t Ticket) updateToDB() error {
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-	if err != nil {
-		return err
-	}
-
 	query := `UPDATE tickets
 		SET zdticket=?,
 		userid=?,
@@ -20,7 +13,7 @@ func (t Ticket) updateToDB() error {
 		status=?
 		WHERE ticket_id=?`
 
-	_, err = db.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Number)
+	_, err := database.DBCon.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Number)
 	if err != nil {
 		return err
 	}
@@ -30,12 +23,9 @@ func (t Ticket) updateToDB() error {
 }
 
 func (t *Ticket) addToDB() error {
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-
 	query := `INSERT INTO tickets (zdticket, userid, issue, initials, status)
 		VALUES (?, ?, ?, ?, 0);`
-	result, err := db.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials)
+	result, err := database.DBCon.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials)
 	if err != nil {
 		return err
 	}
@@ -54,17 +44,11 @@ func (t *Ticket) addToDB() error {
 }
 
 func getFromDB(num int64) (Ticket, error) {
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-	if err != nil {
-		return Ticket{}, err
-	}
-
 	query := `SELECT ticket_id, zdticket, userid, issue, initials, status FROM tickets
 		WHERE ticket_id=?`
-	r := db.QueryRow(query, num)
+	r := database.DBCon.QueryRow(query, num)
 	t := Ticket{}
-	err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status)
+	err := r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status)
 	if err != nil {
 		return Ticket{}, err
 	}
@@ -77,20 +61,13 @@ func getFromDB(num int64) (Ticket, error) {
 	return t, nil
 }
 
-func getNext10FromDB(lastTicket int64, status StatusType) ([]Ticket, error) {
-	var ts []Ticket
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-	if err != nil {
-		return ts, err
-	}
-
+func getNext10FromDB(lastTicket int64, status StatusType) (ts []Ticket, err error) {
 	// Select rows with limit
 	query := `SELECT ticket_id, zdticket, userid, issue, initials, status 
 		FROM tickets 
 		WHERE ticket_id>? AND status=?
 		LIMIT 10`
-	r, err := db.Query(query, lastTicket, status)
+	r, err := database.DBCon.Query(query, lastTicket, status)
 	if err != nil {
 		return ts, err
 	}
@@ -109,19 +86,11 @@ func getNext10FromDB(lastTicket int64, status StatusType) ([]Ticket, error) {
 	return ts, nil
 }
 
-func getRowsFound(lastTicket int64, status StatusType) (int64, error) {
-	var rowsFound int64
-
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-	if err != nil {
-		return rowsFound, err
-	}
-
+func getRowsFound(lastTicket int64, status StatusType) (rowsFound int64, err error) {
 	query := `SELECT COUNT(*) 
 		FROM tickets 
 		WHERE ticket_id>? AND status=?`
-	count := db.QueryRow(query, lastTicket, status)
+	count := database.DBCon.QueryRow(query, lastTicket, status)
 
 	err = count.Scan(&rowsFound)
 	if err != nil {

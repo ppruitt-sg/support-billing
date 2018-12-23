@@ -1,8 +1,13 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"os"
 
+	"database/sql"
+
+	"./database"
 	"./ticket"
 	"./view"
 	_ "github.com/go-sql-driver/mysql"
@@ -18,5 +23,12 @@ func main() {
 	http.HandleFunc("/solve/", ticket.Solve)
 	http.HandleFunc("/search/", ticket.Search)
 
+	var err error
+	database.DBCon, err = sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	http.ListenAndServe(":8080", nil)
+
 }
