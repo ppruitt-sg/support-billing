@@ -19,7 +19,7 @@ type Ticket struct {
 	UserID   int             `schema:"userid"`
 	Issue    IssueType       `schema:"issue"`
 	Initials string          `schema:"initials"`
-	Solved   bool            `schema:"-"`
+	Status   StatusType      `schema:"-"`
 	Comment  comment.Comment `schema:"comment"`
 }
 
@@ -27,6 +27,7 @@ type Tickets struct {
 	Tickets    []Ticket
 	NextButton bool
 	LastTicket int64
+	Status     StatusType
 }
 
 func parseNewForm(r *http.Request) (t Ticket, err error) {
@@ -62,7 +63,7 @@ func parseSearchForm(r *http.Request) (t int, err error) {
 	return t, err
 }
 
-func DisplayNext10(solved bool) func(http.ResponseWriter, *http.Request) {
+func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var lastTicket int64
 		var ts Tickets
@@ -74,15 +75,16 @@ func DisplayNext10(solved bool) func(http.ResponseWriter, *http.Request) {
 			}
 		}
 
-		ts.Tickets, err = getNext10FromDB(lastTicket, solved)
+		ts.Tickets, err = getNext10FromDB(lastTicket, status)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		if len(ts.Tickets) > 0 {
 			ts.LastTicket = ts.Tickets[len(ts.Tickets)-1].Number
 		}
+		ts.Status = status
 
-		rowsFound, err := getRowsFound(lastTicket, solved)
+		rowsFound, err := getRowsFound(lastTicket, status)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -166,7 +168,7 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		t.Solved = true
+		t.Status = StatusSolved
 		err = t.updateToDB()
 		if err != nil {
 			log.Fatalln(err)

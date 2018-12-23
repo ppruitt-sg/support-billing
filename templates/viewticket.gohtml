@@ -33,8 +33,8 @@
                 <td><span class="mono">{{.Initials}}</span></td>
             </tr>
             <tr>
-                <td><strong>Solved</strong></td>
-                <td><span class="mono">{{.Solved}}</span></td>
+                <td><strong>Status</strong></td>
+                <td><span class="mono">{{.Status.ToString}}</span></td>
             </tr>
             <tr>
                 <td><strong>Additional Comments</strong></td>
@@ -45,7 +45,7 @@
 </div>
 <div class="row">
     <div class="col-1 col-start-2">
-    {{if (eq .Solved  false)}}
+    {{if (eq .Status  0)}}
         <form action="/solve/{{.Number}}" method="post">
         <button class="btn btn-primary" name="solve" type="submit" value="solve">Solve</button>
         </form>

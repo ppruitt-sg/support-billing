@@ -9,6 +9,9 @@
 <body>
 {{template "header"}}
 <div class="row">
+  <div class="col-5 col-start-2">
+      <h1>{{.Status.ToString}} Tickets</h1>
+  </div>
   <div class="col-8 col-start-2">
     <table class="table-wrap">
       <thead>
@@ -17,7 +20,7 @@
           <th>UserID</th>
           <th>ZenDesk Ticket</th> 
           <th>Issue Type</th>
-          <th>Solved</th>
+          <th>Status</th>
         </tr>
       </thead>
       {{range .Tickets}}
@@ -26,7 +29,7 @@
         <td><a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></td> 
         <td><a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDTicket}}" target="_blank">{{.ZDTicket}}</a></td>
         <td>{{.Issue.ToString}}</td>
-        <td>{{.Solved}}</td>
+        <td>{{.Status.ToString}}</td>
       </tr>
       {{end}}
     </table>
