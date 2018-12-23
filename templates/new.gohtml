@@ -18,21 +18,21 @@
     <div class="row">
         <div class="input-text-wrap is-required is-focused col-2 col-start-2">
             <label class="input-text-label" for="zdticket-input">Zendesk Ticket</label>
-            <input type="number" name="zdticket" id="zdticket-input">
+            <input type="number" name="zdticket" id="zdticket-input" required>
         </div>
     </div>
     <div class="row">
         <div class="input-text-wrap is-required is-focused col-2 col-start-2">
             <label class="input-text-label" for="userid-input">UserID</label>
-            <input type="number" name="userid" id="userid-input">
+            <input type="number" name="userid" id="userid-input" required>
         </div>
     </div>
     <div class="row">
         <div class="input-select-wrap is-required col-2 col-start-2">
             <label class="input-select-label" for="issue-input">Issue</label>
             <div class="input-select">
-                <select id="issue-input" name="issue">
-                    <option selected="true">Select an issue</option>
+                <select id="issue-input" name="issue" required>
+                    <option selected="true" value="">Select an issue</option>
                     <option value="0">Refund</option>
                     <option value="1">Billing Terminated</option>
                     <option value="2">DNA FP Reactivation</option>
@@ -45,13 +45,13 @@
     <div class="row">
         <div class="input-text-wrap is-required is-focused col-2 col-start-2">
             <label class="input-text-label">Initials</label>
-            <input type="text" name="initials">
+            <input type="text" name="initials" required>
         </div>
     </div>
     <div class="row">
-        <div class="textarea-wrap is-focused is-scrollable col-6 col-start-2">
+        <div class="textarea-wrap is-focused col-6 col-start-2">
             <label class="textarea-label" for="comment-input">Additional Comments</label>
-            <textarea class="textarea-input" style="height: 75px;" rows="3" id="comment-input" name="comment.text"></textarea>
+            <textarea class="textarea-input" id="comment-input" name="comment.text"></textarea>
         </div>
     </div>
     <div class="row">
