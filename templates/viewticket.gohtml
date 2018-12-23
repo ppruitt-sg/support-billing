@@ -46,7 +46,7 @@
 <div class="row">
     <div class="col-1 col-start-2">
     {{if (eq .Status  0)}}
-        <form action="/solve/{{.Number}}" method="post">
+        <form action="/solve/{{.Number}}" method="POST">
         <button class="btn btn-primary" name="solve" type="submit" value="solve">Solve</button>
         </form>
     {{end}}
