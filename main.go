@@ -14,6 +14,8 @@ import (
 )
 
 func main() {
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
+
 	http.HandleFunc("/", view.TemplateHandler("new"))
 	http.HandleFunc("/new/", view.TemplateHandler("new"))
 	http.HandleFunc("/create", ticket.Create)
