@@ -15,7 +15,7 @@ import (
 
 type Ticket struct {
 	Number   int64           `schema:"-"`
-	ZDNum    int             `schema:"zdnum"`
+	ZDTicket int             `schema:"zdticket"`
 	UserID   int             `schema:"userid"`
 	Issue    IssueType       `schema:"issue"`
 	Initials string          `schema:"initials"`
@@ -62,7 +62,7 @@ func parseSearchForm(r *http.Request) (t int, err error) {
 	return t, err
 }
 
-func DisplayNext5(solved bool) func(http.ResponseWriter, *http.Request) {
+func DisplayNext10(solved bool) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var lastTicket int64
 		var ts Tickets
@@ -74,7 +74,7 @@ func DisplayNext5(solved bool) func(http.ResponseWriter, *http.Request) {
 			}
 		}
 
-		ts.Tickets, err = getNext5FromDB(lastTicket, solved)
+		ts.Tickets, err = getNext10FromDB(lastTicket, solved)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -87,7 +87,7 @@ func DisplayNext5(solved bool) func(http.ResponseWriter, *http.Request) {
 			log.Fatalln(err)
 		}
 
-		if rowsFound > 5 {
+		if rowsFound > 10 {
 			ts.NextButton = true
 		}
 		view.Render(w, "listtickets.gohtml", ts)
@@ -120,21 +120,22 @@ func parseIntFromURL(path string, r *http.Request) (int64, error) {
 	return strconv.ParseInt(strings.Replace(r.URL.Path, path, "", 1), 10, 64)
 }
 
+func Search(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	http.Redirect(w, r, "../view/"+r.Form["number"][0], http.StatusMovedPermanently)
+	return
+}
+
 func Display() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var ticketNumber int64
 		var err error
-		switch r.Method {
-		case "GET":
-			ticketNumber, err = parseIntFromURL("/view/", r)
-			if err != nil {
-				log.Fatalln(err)
-			}
-		case "POST":
-			r.ParseForm()
-			http.Redirect(w, r, r.Form["number"][0], http.StatusMovedPermanently)
-			return
+
+		ticketNumber, err = parseIntFromURL("/view/", r)
+		if err != nil {
+			log.Fatalln(err)
 		}
+
 		t, err := getFromDB(ticketNumber)
 		if err != nil {
 			switch err {

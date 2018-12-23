@@ -20,7 +20,7 @@ func (t Ticket) updateToDB() error {
 		solved=?
 		WHERE ticket_id=?`
 
-	_, err = db.Exec(query, t.ZDNum, t.UserID, t.Issue, t.Initials, t.Solved, t.Number)
+	_, err = db.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Solved, t.Number)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (t *Ticket) addToDB() error {
 
 	query := `INSERT INTO tickets (zdticket, userid, issue, initials, solved)
 		VALUES (?, ?, ?, ?, 0);`
-	result, err := db.Exec(query, t.ZDNum, t.UserID, t.Issue, t.Initials)
+	result, err := db.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func getFromDB(num int64) (Ticket, error) {
 		WHERE ticket_id=?`
 	r := db.QueryRow(query, num)
 	t := Ticket{}
-	err = r.Scan(&t.Number, &t.ZDNum, &t.UserID, &t.Issue, &t.Initials, &t.Solved)
+	err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Solved)
 	if err != nil {
 		return Ticket{}, err
 	}
@@ -77,7 +77,7 @@ func getFromDB(num int64) (Ticket, error) {
 	return t, nil
 }
 
-func getNext5FromDB(lastTicket int64, solved bool) ([]Ticket, error) {
+func getNext10FromDB(lastTicket int64, solved bool) ([]Ticket, error) {
 	var ts []Ticket
 	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
 	defer db.Close()
@@ -89,7 +89,7 @@ func getNext5FromDB(lastTicket int64, solved bool) ([]Ticket, error) {
 	query := `SELECT ticket_id, zdticket, userid, issue, initials, solved 
 		FROM tickets 
 		WHERE ticket_id>? AND solved=?
-		LIMIT 5`
+		LIMIT 10`
 	r, err := db.Query(query, lastTicket, solved)
 	if err != nil {
 		return ts, err
@@ -97,7 +97,7 @@ func getNext5FromDB(lastTicket int64, solved bool) ([]Ticket, error) {
 
 	t := Ticket{}
 	for r.Next() {
-		err = r.Scan(&t.Number, &t.ZDNum, &t.UserID, &t.Issue, &t.Initials, &t.Solved)
+		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Solved)
 		if err != nil {
 			return ts, err
 		}
