@@ -1,9 +1,9 @@
 package comment
 
 import (
-	"database/sql"
-	"os"
 	"time"
+
+	"../database"
 )
 
 type Comment struct {
@@ -12,12 +12,10 @@ type Comment struct {
 	TicketNumber int64
 }
 
-func (c Comment) AddToDB() error {
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
+func (c Comment) AddToDB() (err error) {
 	query := `INSERT INTO comments (timestamp, text, ticket_id)
 		VALUES (?, ?, ?)`
-	_, err = db.Exec(query, c.Timestamp.Unix(), c.Text, c.TicketNumber)
+	_, err = database.DBCon.Exec(query, c.Timestamp.Unix(), c.Text, c.TicketNumber)
 	if err != nil {
 		return err
 	}
@@ -25,16 +23,10 @@ func (c Comment) AddToDB() error {
 }
 
 func (c *Comment) GetFromDB(num int64) (err error) {
-	db, err := sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/supportbilling")
-	defer db.Close()
-	if err != nil {
-		return err
-	}
-
 	query := `SELECT timestamp, text, ticket_id FROM comments
 		WHERE ticket_id=?`
 
-	r := db.QueryRow(query, num)
+	r := database.DBCon.QueryRow(query, num)
 	var ts int64
 	err = r.Scan(&ts, &c.Text, &c.TicketNumber)
 	if err != nil {
