@@ -26,7 +26,7 @@ func main() {
 	http.HandleFunc("/search/", ticket.Search)
 
 	var err error
-	database.DBCon, err = sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@/"+os.Getenv("DB_NAME"))
+	database.DBCon, err = sql.Open("mysql", os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@tcp("+os.Getenv("DB_SITE")+":3306)/supportbilling")
 	if err != nil {
 		log.Fatalln(err)
 	}
