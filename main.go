@@ -15,14 +15,14 @@ import (
 func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
-	http.HandleFunc("/", ticket.Home)
-	http.HandleFunc("/new/", ticket.New)
-	http.HandleFunc("/create", ticket.Create)
-	http.HandleFunc("/view/open/", ticket.DisplayNext10(ticket.StatusOpen))
-	http.HandleFunc("/view/solved/", ticket.DisplayNext10(ticket.StatusSolved))
-	http.HandleFunc("/view/", ticket.Display())
-	http.HandleFunc("/solve/", ticket.Solve)
-	http.HandleFunc("/search/", ticket.Search)
+	http.HandleFunc("/", ticket.LogHandler(ticket.Home))
+	http.HandleFunc("/new/", ticket.LogHandler(ticket.New))
+	http.HandleFunc("/create", ticket.LogHandler(ticket.Create))
+	http.HandleFunc("/view/open/", ticket.LogHandler(ticket.DisplayNext10(ticket.StatusOpen)))
+	http.HandleFunc("/view/solved/", ticket.LogHandler(ticket.DisplayNext10(ticket.StatusSolved)))
+	http.HandleFunc("/view/", ticket.LogHandler(ticket.Display()))
+	http.HandleFunc("/solve/", ticket.LogHandler(ticket.Solve))
+	http.HandleFunc("/search/", ticket.LogHandler(ticket.Search))
 
 	var err error
 	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))

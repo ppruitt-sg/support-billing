@@ -69,12 +69,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	New(w, r)
-	log.Printf("%s - 200", r.URL.Path)
 }
 
 func New(w http.ResponseWriter, r *http.Request) {
 	view.Render(w, "new.gohtml", nil)
-	log.Printf("%s - 200", r.URL.Path)
 }
 
 func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
@@ -107,7 +105,6 @@ func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
 			ts.NextButton = true
 		}
 		view.Render(w, "listtickets.gohtml", ts)
-		log.Printf("%s - 200", r.URL.Path)
 	}
 }
 
@@ -128,7 +125,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		log.Printf("%s - 202", r.URL.Path)
 	} else {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	}
@@ -170,14 +166,12 @@ func Display() func(http.ResponseWriter, *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		log.Printf("%s - 200", r.URL.Path)
 	}
 }
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	view.Render(w, "404.gohtml", nil)
-	log.Printf("%s - 404", r.URL.Path)
 }
 
 func Solve(w http.ResponseWriter, r *http.Request) {
@@ -197,8 +191,14 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err)
 		}
 		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
-		log.Printf("%s - 202", r.URL.Path)
 	} else {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	}
+}
+
+func LogHandler(f func(w http.ResponseWriter, r *http.Request)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s - %s", r.Method, r.URL.Path)
+		f(w, r)
 	}
 }
