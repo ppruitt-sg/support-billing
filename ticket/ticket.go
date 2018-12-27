@@ -47,22 +47,6 @@ func parseNewForm(r *http.Request) (t Ticket, err error) {
 	return t, nil
 }
 
-func parseSearchForm(r *http.Request) (t int, err error) {
-	err = r.ParseForm()
-	if err != nil {
-		return t, err
-	}
-
-	decoder := schema.NewDecoder()
-
-	err = decoder.Decode(&t, r.PostForm)
-	if err != nil {
-		return t, err
-	}
-
-	return t, err
-}
-
 func Home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		notFoundHandler(w, r)
