@@ -2,6 +2,7 @@ package ticket
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -114,7 +115,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err)
 		}
 	} else {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	}
 }
 
@@ -135,7 +136,8 @@ func Display() func(http.ResponseWriter, *http.Request) {
 
 		ticketNumber, err = parseIntFromURL("/view/", r)
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Println(err)
+			http.Redirect(w, r, "/", http.StatusMovedPermanently)
 		}
 
 		t, err := getFromDB(ticketNumber)
@@ -175,6 +177,6 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
 	} else {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	}
 }
