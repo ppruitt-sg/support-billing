@@ -18,9 +18,9 @@ func main() {
 	http.HandleFunc("/", ticket.LogHandler(ticket.Home))
 	http.HandleFunc("/new/", ticket.LogHandler(ticket.New))
 	http.HandleFunc("/create", ticket.LogHandler(ticket.Create))
-	http.HandleFunc("/view/open/", ticket.LogHandler(ticket.DisplayNext10(ticket.StatusOpen)))
-	http.HandleFunc("/view/solved/", ticket.LogHandler(ticket.DisplayNext10(ticket.StatusSolved)))
-	http.HandleFunc("/view/", ticket.LogHandler(ticket.Display()))
+	http.HandleFunc("/view/open/", ticket.LogHandler(ticket.RetrieveNext10(ticket.StatusOpen)))
+	http.HandleFunc("/view/solved/", ticket.LogHandler(ticket.RetrieveNext10(ticket.StatusSolved)))
+	http.HandleFunc("/view/", ticket.LogHandler(ticket.Retrieve()))
 	http.HandleFunc("/solve/", ticket.LogHandler(ticket.Solve))
 	http.HandleFunc("/search/", ticket.LogHandler(ticket.Search))
 

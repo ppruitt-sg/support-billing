@@ -59,7 +59,7 @@ func New(w http.ResponseWriter, r *http.Request) {
 	view.Render(w, "new.gohtml", nil)
 }
 
-func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
+func RetrieveNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var lastTicket int64
 		var ts Tickets
@@ -124,7 +124,7 @@ func Search(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func Display() func(http.ResponseWriter, *http.Request) {
+func Retrieve() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ticketNumber, err := parseIntFromURL("/view/", r)
 		if err != nil {
