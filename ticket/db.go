@@ -65,7 +65,7 @@ func getNext10FromDB(lastTicket int64, status StatusType) (ts []Ticket, err erro
 	// Select rows with limit
 	query := `SELECT ticket_id, zdticket, userid, issue, initials, status 
 		FROM tickets 
-		WHERE ticket_id>? AND status=?
+		WHERE ticket_id>? AND status=? AND issue<>4
 		LIMIT 10`
 	r, err := database.DBCon.Query(query, lastTicket, status)
 	if err != nil {
@@ -89,7 +89,7 @@ func getNext10FromDB(lastTicket int64, status StatusType) (ts []Ticket, err erro
 func getRowsFound(lastTicket int64, status StatusType) (rowsFound int64, err error) {
 	query := `SELECT COUNT(*) 
 		FROM tickets 
-		WHERE ticket_id>? AND status=?`
+		WHERE ticket_id>? AND status=? AND issue<>4`
 	count := database.DBCon.QueryRow(query, lastTicket, status)
 
 	err = count.Scan(&rowsFound)
