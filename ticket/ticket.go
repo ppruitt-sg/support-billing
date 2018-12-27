@@ -64,6 +64,18 @@ func parseSearchForm(r *http.Request) (t int, err error) {
 	return t, err
 }
 
+func Home(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		notFoundHandler(w, r)
+		return
+	}
+	New(w, r)
+}
+
+func New(w http.ResponseWriter, r *http.Request) {
+	view.Render(w, "new.gohtml", nil)
+}
+
 func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var lastTicket int64
@@ -137,7 +149,8 @@ func Display() func(http.ResponseWriter, *http.Request) {
 		ticketNumber, err = parseIntFromURL("/view/", r)
 		if err != nil {
 			fmt.Println(err)
-			http.Redirect(w, r, "/", http.StatusMovedPermanently)
+			notFoundHandler(w, r)
+			return
 		}
 
 		t, err := getFromDB(ticketNumber)
@@ -157,6 +170,11 @@ func Display() func(http.ResponseWriter, *http.Request) {
 			log.Fatalln(err)
 		}
 	}
+}
+
+func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	view.Render(w, "404.gohtml", nil)
 }
 
 func Solve(w http.ResponseWriter, r *http.Request) {

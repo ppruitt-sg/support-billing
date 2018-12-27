@@ -9,15 +9,14 @@ import (
 
 	"./database"
 	"./ticket"
-	"./view"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
-	http.HandleFunc("/", view.TemplateHandler("new"))
-	http.HandleFunc("/new/", view.TemplateHandler("new"))
+	http.HandleFunc("/", ticket.Home)
+	http.HandleFunc("/new/", ticket.New)
 	http.HandleFunc("/create", ticket.Create)
 	http.HandleFunc("/view/open/", ticket.DisplayNext10(ticket.StatusOpen))
 	http.HandleFunc("/view/solved/", ticket.DisplayNext10(ticket.StatusSolved))
