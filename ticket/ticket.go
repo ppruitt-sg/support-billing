@@ -2,7 +2,6 @@ package ticket
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -70,10 +69,12 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	New(w, r)
+	log.Printf("%s - 200", r.URL.Path)
 }
 
 func New(w http.ResponseWriter, r *http.Request) {
 	view.Render(w, "new.gohtml", nil)
+	log.Printf("%s - 200", r.URL.Path)
 }
 
 func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
@@ -106,6 +107,7 @@ func DisplayNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
 			ts.NextButton = true
 		}
 		view.Render(w, "listtickets.gohtml", ts)
+		log.Printf("%s - 200", r.URL.Path)
 	}
 }
 
@@ -126,6 +128,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
+		log.Printf("%s - 202", r.URL.Path)
 	} else {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	}
@@ -143,12 +146,9 @@ func Search(w http.ResponseWriter, r *http.Request) {
 
 func Display() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var ticketNumber int64
-		var err error
-
-		ticketNumber, err = parseIntFromURL("/view/", r)
+		ticketNumber, err := parseIntFromURL("/view/", r)
 		if err != nil {
-			fmt.Println(err)
+			// Treat error as 404
 			notFoundHandler(w, r)
 			return
 		}
@@ -159,6 +159,7 @@ func Display() func(http.ResponseWriter, *http.Request) {
 			case sql.ErrNoRows:
 				w.WriteHeader(http.StatusNotFound)
 				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
+				log.Printf("%s - 404", r.URL.Path)
 				return
 			default:
 				log.Fatalln(err)
@@ -169,12 +170,14 @@ func Display() func(http.ResponseWriter, *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
+		log.Printf("%s - 200", r.URL.Path)
 	}
 }
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	view.Render(w, "404.gohtml", nil)
+	log.Printf("%s - 404", r.URL.Path)
 }
 
 func Solve(w http.ResponseWriter, r *http.Request) {
@@ -194,6 +197,7 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 			log.Fatalln(err)
 		}
 		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
+		log.Printf("%s - 202", r.URL.Path)
 	} else {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	}
