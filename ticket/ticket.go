@@ -143,6 +143,7 @@ func Display() func(http.ResponseWriter, *http.Request) {
 			switch err {
 			case sql.ErrNoRows:
 				w.WriteHeader(http.StatusNotFound)
+				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
 				return
 			default:
 				log.Fatalln(err)
@@ -154,7 +155,6 @@ func Display() func(http.ResponseWriter, *http.Request) {
 			log.Fatalln(err)
 		}
 	}
-
 }
 
 func Solve(w http.ResponseWriter, r *http.Request) {
