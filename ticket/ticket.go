@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"../comment"
@@ -24,10 +23,12 @@ type Ticket struct {
 	Comment  comment.Comment `schema:"comment"`
 }
 
-type Tickets struct {
+type TicketsPage struct {
 	Tickets    []Ticket
 	NextButton bool
 	NextPage   int64
+	PrevPage   int64
+	PrevButton bool
 	Status     StatusType
 }
 
@@ -63,12 +64,14 @@ func getOffsetFromPage(page int64) int64 {
 	return page*10 - 10
 }
 
-func RetrieveNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
+func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var page int64
-		var ts Tickets
-		ts.Status = status
+		var tp TicketsPage
 		var err error
+
+		tp.Status = status
+
 		if keys, ok := r.URL.Query()["page"]; ok {
 			page, err = strconv.ParseInt(keys[0], 10, 64)
 			if err != nil {
@@ -80,16 +83,20 @@ func RetrieveNext10(status StatusType) func(http.ResponseWriter, *http.Request) 
 
 		offset := getOffsetFromPage(page)
 
-		ts.Tickets, err = getNext10FromDB(offset, status)
+		tp.Tickets, err = getNext10FromDB(offset, status)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		ts.NextPage = page + 1
-
-		if len(ts.Tickets) == 10 {
-			ts.NextButton = true
+		tp.NextPage = page + 1
+		if len(tp.Tickets) == 10 {
+			tp.NextButton = true
 		}
-		view.Render(w, "listtickets.gohtml", ts)
+
+		tp.PrevPage = page - 1
+		if page > 1 {
+			tp.PrevButton = true
+		}
+		view.Render(w, "listtickets.gohtml", tp)
 	}
 }
 
@@ -113,10 +120,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 	}
-}
-
-func parseIntFromURL(path string, r *http.Request) (int64, error) {
-	return strconv.ParseInt(strings.Replace(r.URL.Path, path, "", 1), 10, 64)
 }
 
 func Search(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +157,8 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 
 func Solve(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		ticketNumber, err := parseIntFromURL("/solve/", r)
+		vars := mux.Vars(r)
+		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
 		if err != nil {
 			log.Fatalln(err)
 		}

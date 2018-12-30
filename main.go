@@ -30,10 +30,10 @@ func main() {
 	r.HandleFunc("/", ticket.Home)
 	r.HandleFunc("/new/", ticket.New)
 	r.HandleFunc("/create", ticket.Create)
-	r.HandleFunc("/view/open/", ticket.RetrieveNext10(ticket.StatusOpen))
-	r.HandleFunc("/view/solved/", ticket.RetrieveNext10(ticket.StatusSolved))
+	r.HandleFunc("/view/open/", ticket.Retrieve10(ticket.StatusOpen))
+	r.HandleFunc("/view/solved/", ticket.Retrieve10(ticket.StatusSolved))
 	r.HandleFunc("/view/{number:[0-9]+}", ticket.Retrieve())
-	r.HandleFunc("/solve/", ticket.Solve)
+	r.HandleFunc("/solve/{number:[0-9]+}", ticket.Solve)
 	r.HandleFunc("/search/", ticket.Search)
 
 	r.NotFoundHandler = http.HandlerFunc(notFound)

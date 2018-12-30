@@ -63,10 +63,20 @@ func getFromDB(num int64) (Ticket, error) {
 
 func getNext10FromDB(offset int64, status StatusType) (ts []Ticket, err error) {
 	// Select rows with limit
-	query := `SELECT ticket_id, zdticket, userid, issue, initials, status 
+	var query string
+	switch status {
+	case StatusOpen:
+		query = `SELECT ticket_id, zdticket, userid, issue, initials, status 
 		FROM tickets 
 		WHERE status=? AND issue<>4
 		LIMIT ?, 10`
+	case StatusSolved:
+		query = `SELECT ticket_id, zdticket, userid, issue, initials, status 
+		FROM tickets 
+		WHERE status=? AND issue<>4
+		ORDER BY ticket_id DESC
+		LIMIT ?, 10`
+	}
 	r, err := database.DBCon.Query(query, status, offset)
 	if err != nil {
 		return ts, err

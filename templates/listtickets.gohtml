@@ -34,8 +34,11 @@
       </tr>
       {{end}}
     </table>
+    {{ if .PrevButton}}
+    <a class="btn btn-small btn-secondary" href="/view/{{.Status.ToString | ToLower}}/?page={{.PrevPage}}">Prev</a>
+    {{end}}
     {{ if .NextButton}}
-    <a class="btn btn-small btn-secondary" href="/view/open/?page={{.NextPage}}">Next</a>
+    <a class="btn btn-small btn-secondary" href="/view/{{.Status.ToString | ToLower }}/?page={{.NextPage}}">Next</a>
     {{end}}
   </div>
 </div>
