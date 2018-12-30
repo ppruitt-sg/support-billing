@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var tpl *template.Template
@@ -15,7 +16,9 @@ func init() {
 	var err error
 
 	funcMap := template.FuncMap{
-		"ToLower": strings.ToLower,
+		"ToLower":    strings.ToLower,
+		"ToDateTime": toDateTime,
+		"ToDate":     toDate,
 	}
 
 	tpl, err = template.New("").Funcs(funcMap).ParseGlob(pwd + "/templates/*.gohtml")
@@ -28,10 +31,17 @@ func init() {
 }
 
 func Render(w http.ResponseWriter, name string, data interface{}) error {
-
 	err := tpl.ExecuteTemplate(w, name, data)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func toDateTime(t time.Time) string {
+	return t.Format("January 02 2006 3:04pm MST")
+}
+
+func toDate(t time.Time) string {
+	return t.Format("01/02/06")
 }
