@@ -27,7 +27,7 @@ type Ticket struct {
 type Tickets struct {
 	Tickets    []Ticket
 	NextButton bool
-	LastTicket int64
+	NextPage   int64
 	Status     StatusType
 }
 
@@ -56,33 +56,37 @@ func New(w http.ResponseWriter, r *http.Request) {
 	view.Render(w, "new.gohtml", nil)
 }
 
+func getOffsetFromPage(page int64) int64 {
+	if page == 1 {
+		return 0
+	}
+	return page*10 - 10
+}
+
 func RetrieveNext10(status StatusType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var lastTicket int64
+		var page int64
 		var ts Tickets
 		ts.Status = status
 		var err error
-		if keys, ok := r.URL.Query()["last_ticket"]; ok {
-			lastTicket, err = strconv.ParseInt(keys[0], 10, 64)
+		if keys, ok := r.URL.Query()["page"]; ok {
+			page, err = strconv.ParseInt(keys[0], 10, 64)
 			if err != nil {
 				log.Fatalln(err)
 			}
+		} else {
+			page = 1
 		}
 
-		ts.Tickets, err = getNext10FromDB(lastTicket, status)
+		offset := getOffsetFromPage(page)
+
+		ts.Tickets, err = getNext10FromDB(offset, status)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		if len(ts.Tickets) > 0 {
-			ts.LastTicket = ts.Tickets[len(ts.Tickets)-1].Number
-		}
+		ts.NextPage = page + 1
 
-		rowsFound, err := getRowsFound(lastTicket, status)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		if rowsFound > 10 {
+		if len(ts.Tickets) == 10 {
 			ts.NextButton = true
 		}
 		view.Render(w, "listtickets.gohtml", ts)
