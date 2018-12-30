@@ -10,6 +10,7 @@ import (
 
 	"../comment"
 	"../view"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 )
 
@@ -48,10 +49,6 @@ func parseNewForm(r *http.Request) (t Ticket, err error) {
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		notFoundHandler(w, r)
-		return
-	}
 	New(w, r)
 }
 
@@ -126,11 +123,10 @@ func Search(w http.ResponseWriter, r *http.Request) {
 
 func Retrieve() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ticketNumber, err := parseIntFromURL("/view/", r)
+		vars := mux.Vars(r)
+		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
 		if err != nil {
-			// Treat error as 404
-			notFoundHandler(w, r)
-			return
+			log.Fatalln(err)
 		}
 
 		t, err := getFromDB(ticketNumber)
@@ -139,7 +135,6 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 			case sql.ErrNoRows:
 				w.WriteHeader(http.StatusNotFound)
 				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
-				log.Printf("%s - 404", r.URL.Path)
 				return
 			default:
 				log.Fatalln(err)
@@ -151,11 +146,6 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 			log.Fatalln(err)
 		}
 	}
-}
-
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	view.Render(w, "404.gohtml", nil)
 }
 
 func Solve(w http.ResponseWriter, r *http.Request) {
@@ -177,12 +167,5 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
 	} else {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
-	}
-}
-
-func LogHandler(f func(w http.ResponseWriter, r *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s - %s", r.Method, r.URL.Path)
-		f(w, r)
 	}
 }

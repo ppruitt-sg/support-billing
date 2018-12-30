@@ -9,20 +9,13 @@ import (
 
 	"./database"
 	"./ticket"
+	"./view"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
-
-	http.HandleFunc("/", ticket.LogHandler(ticket.Home))
-	http.HandleFunc("/new/", ticket.LogHandler(ticket.New))
-	http.HandleFunc("/create", ticket.LogHandler(ticket.Create))
-	http.HandleFunc("/view/open/", ticket.LogHandler(ticket.RetrieveNext10(ticket.StatusOpen)))
-	http.HandleFunc("/view/solved/", ticket.LogHandler(ticket.RetrieveNext10(ticket.StatusSolved)))
-	http.HandleFunc("/view/", ticket.LogHandler(ticket.Retrieve()))
-	http.HandleFunc("/solve/", ticket.LogHandler(ticket.Solve))
-	http.HandleFunc("/search/", ticket.LogHandler(ticket.Search))
 
 	var err error
 	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
@@ -30,6 +23,26 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	http.ListenAndServe(":8080", nil)
+	r := mux.NewRouter()
 
+	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
+
+	r.HandleFunc("/", ticket.Home)
+	r.HandleFunc("/new/", ticket.New)
+	r.HandleFunc("/create", ticket.Create)
+	r.HandleFunc("/view/open/", ticket.RetrieveNext10(ticket.StatusOpen))
+	r.HandleFunc("/view/solved/", ticket.RetrieveNext10(ticket.StatusSolved))
+	r.HandleFunc("/view/{number:[0-9]+}", ticket.Retrieve())
+	r.HandleFunc("/solve/", ticket.Solve)
+	r.HandleFunc("/search/", ticket.Search)
+
+	r.NotFoundHandler = http.HandlerFunc(notFound)
+
+	http.ListenAndServe(":8080", handlers.LoggingHandler(os.Stdout, r))
+
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	view.Render(w, "404.gohtml", nil)
 }
