@@ -23,9 +23,9 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	r := mux.NewRouter()
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
-	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
+	r := mux.NewRouter()
 
 	r.HandleFunc("/", ticket.Home)
 	r.HandleFunc("/new/", ticket.New)
