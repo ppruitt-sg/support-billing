@@ -11,7 +11,6 @@ import (
 	"./ticket"
 	"./view"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -23,9 +22,9 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
-
 	r := mux.NewRouter()
+
+	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
 	r.HandleFunc("/", ticket.Home)
 	r.HandleFunc("/new/", ticket.New)
@@ -38,7 +37,7 @@ func main() {
 
 	r.NotFoundHandler = http.HandlerFunc(notFound)
 
-	http.ListenAndServe(":8080", handlers.LoggingHandler(os.Stdout, r))
+	http.ListenAndServe(":8080", r)
 
 }
 
