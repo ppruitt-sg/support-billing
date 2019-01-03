@@ -10,6 +10,7 @@ import (
 )
 
 var tpl *template.Template
+var loc *time.Location
 
 func init() {
 	pwd, _ := os.Getwd()
@@ -25,8 +26,11 @@ func init() {
 	if err != nil {
 		log.Panic(err)
 	}
-	/* tpl = template.Must(template.ParseGlob(pwd + "/templates/*.gohtml"))
-	tpl.Funcs(funcMap) */
+
+	loc, err = time.LoadLocation("America/Denver")
+	if err != nil {
+		log.Panic(err)
+	}
 
 }
 
@@ -39,9 +43,9 @@ func Render(w http.ResponseWriter, name string, data interface{}) error {
 }
 
 func toDateTime(t time.Time) string {
-	return t.Format("January 02 2006 3:04pm MST")
+	return t.In(loc).Format("January 02 2006 3:04pm")
 }
 
 func toDate(t time.Time) string {
-	return t.Format("Jan _2 2006")
+	return t.In(loc).Format("Jan _2 2006")
 }
