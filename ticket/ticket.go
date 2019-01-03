@@ -14,13 +14,14 @@ import (
 )
 
 type Ticket struct {
-	Number   int64           `schema:"-"`
-	ZDTicket int             `schema:"zdticket"`
-	UserID   int             `schema:"userid"`
-	Issue    IssueType       `schema:"issue"`
-	Initials string          `schema:"initials"`
-	Status   StatusType      `schema:"-"`
-	Comment  comment.Comment `schema:"comment"`
+	Number    int64      `schema:"-"`
+	ZDTicket  int        `schema:"zdticket"`
+	UserID    int        `schema:"userid"`
+	Issue     IssueType  `schema:"issue"`
+	Initials  string     `schema:"initials"`
+	Status    StatusType `schema:"-"`
+	Submitted time.Time
+	Comment   comment.Comment `schema:"comment"`
 }
 
 type TicketsPage struct {
@@ -44,7 +45,6 @@ func parseNewForm(r *http.Request) (t Ticket, err error) {
 	if err != nil {
 		return Ticket{}, err
 	}
-	t.Comment.Timestamp = time.Now()
 
 	return t, nil
 }
@@ -107,6 +107,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		// Set up timestamp on ticket and comment
+		t.Submitted = time.Now()
+		t.Comment.Timestamp = time.Now()
+
 		// Add to database
 		err = t.addToDB()
 		if err != nil {

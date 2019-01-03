@@ -17,6 +17,7 @@
     <table class="table-wrap">
       <thead>
         <tr>
+          <th>Submitted</th>
           <th>Ticket Number</th>
           <th>UserID</th>
           <th>ZenDesk Ticket</th> 
@@ -26,6 +27,7 @@
       </thead>
       {{range .Tickets}}
       <tr>
+        <td>{{.Submitted | ToDate }}</td>
         <td><a href="/view/{{.Number}}"><strong>{{.Number}}</strong></td>
         <td><a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></td> 
         <td><a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDTicket}}" target="_blank">{{.ZDTicket}}</a></td>

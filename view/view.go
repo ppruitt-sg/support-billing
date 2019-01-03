@@ -43,5 +43,5 @@ func toDateTime(t time.Time) string {
 }
 
 func toDate(t time.Time) string {
-	return t.Format("01/02/06")
+	return t.Format("Jan _2 2006")
 }

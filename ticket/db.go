@@ -1,6 +1,8 @@
 package ticket
 
 import (
+	"time"
+
 	"../database"
 )
 
@@ -23,9 +25,9 @@ func (t Ticket) updateToDB() error {
 }
 
 func (t *Ticket) addToDB() error {
-	query := `INSERT INTO tickets (zdticket, userid, issue, initials, status)
-		VALUES (?, ?, ?, ?, 0);`
-	result, err := database.DBCon.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials)
+	query := `INSERT INTO tickets (zdticket, userid, issue, initials, status, submitted)
+		VALUES (?, ?, ?, ?, ?, ?);`
+	result, err := database.DBCon.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Submitted.Unix())
 	if err != nil {
 		return err
 	}
@@ -44,14 +46,16 @@ func (t *Ticket) addToDB() error {
 }
 
 func getFromDB(num int64) (Ticket, error) {
-	query := `SELECT ticket_id, zdticket, userid, issue, initials, status FROM tickets
+	query := `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted FROM tickets
 		WHERE ticket_id=?`
 	r := database.DBCon.QueryRow(query, num)
 	t := Ticket{}
-	err := r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status)
+	var timestamp int64
+	err := r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
 	if err != nil {
 		return Ticket{}, err
 	}
+	t.Submitted = time.Unix(timestamp, 0)
 
 	err = t.Comment.GetFromDB(num)
 	if err != nil {
@@ -66,12 +70,12 @@ func getNext10FromDB(offset int64, status StatusType) (ts []Ticket, err error) {
 	var query string
 	switch status {
 	case StatusOpen:
-		query = `SELECT ticket_id, zdticket, userid, issue, initials, status 
+		query = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
 		FROM tickets 
 		WHERE status=? AND issue<>4
 		LIMIT ?, 10`
 	case StatusSolved:
-		query = `SELECT ticket_id, zdticket, userid, issue, initials, status 
+		query = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
 		FROM tickets 
 		WHERE status=? AND issue<>4
 		ORDER BY ticket_id DESC
@@ -83,11 +87,13 @@ func getNext10FromDB(offset int64, status StatusType) (ts []Ticket, err error) {
 	}
 
 	t := Ticket{}
+	var timestamp int64
 	for r.Next() {
-		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status)
+		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
 		if err != nil {
 			return ts, err
 		}
+		t.Submitted = time.Unix(timestamp, 0)
 		ts = append(ts, t)
 	}
 	if r.Err() != nil {

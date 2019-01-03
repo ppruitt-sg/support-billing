@@ -11,6 +11,7 @@ import (
 	"./ticket"
 	"./view"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -37,7 +38,7 @@ func main() {
 
 	r.NotFoundHandler = http.HandlerFunc(notFound)
 
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":8080", handlers.LoggingHandler(os.Stdout, r))
 
 }
 
