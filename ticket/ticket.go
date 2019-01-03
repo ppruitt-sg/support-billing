@@ -127,12 +127,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Search(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	http.Redirect(w, r, "../view/"+r.Form["number"][0], http.StatusMovedPermanently)
-	return
-}
-
 func Retrieve() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

@@ -34,7 +34,6 @@ func main() {
 	r.HandleFunc("/view/solved/", ticket.Retrieve10(ticket.StatusSolved))
 	r.HandleFunc("/view/{number:[0-9]+}", ticket.Retrieve())
 	r.HandleFunc("/solve/{number:[0-9]+}", ticket.Solve)
-	r.HandleFunc("/search/", ticket.Search)
 
 	r.NotFoundHandler = http.HandlerFunc(notFound)
 
