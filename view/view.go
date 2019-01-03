@@ -43,7 +43,7 @@ func Render(w http.ResponseWriter, name string, data interface{}) error {
 }
 
 func toDateTime(t time.Time) string {
-	return t.In(loc).Format("January 02 2006 3:04pm")
+	return t.In(loc).Format("January 02 2006 3:04pm MST")
 }
 
 func toDate(t time.Time) string {
