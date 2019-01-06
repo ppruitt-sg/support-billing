@@ -28,13 +28,13 @@ func main() {
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 	r.StrictSlash(true)
 
-	r.HandleFunc("/", ticket.Home)
-	r.HandleFunc("/new/", ticket.New)
-	r.HandleFunc("/create", ticket.Create)
-	r.HandleFunc("/view/open/", ticket.Retrieve10(ticket.StatusOpen))
-	r.HandleFunc("/view/solved/", ticket.Retrieve10(ticket.StatusSolved))
-	r.HandleFunc("/view/{number:[0-9]+}", ticket.Retrieve())
-	r.HandleFunc("/solve/{number:[0-9]+}", ticket.Solve)
+	r.HandleFunc("/", ticket.Home).Methods("GET")
+	r.HandleFunc("/new/", ticket.New).Methods("GET")
+	r.HandleFunc("/create", ticket.Create).Methods("POST")
+	r.HandleFunc("/view/open/", ticket.Retrieve10(ticket.StatusOpen)).Methods("GET")
+	r.HandleFunc("/view/solved/", ticket.Retrieve10(ticket.StatusSolved)).Methods("GET")
+	r.HandleFunc("/view/{number:[0-9]+}", ticket.Retrieve()).Methods("GET")
+	r.HandleFunc("/solve/{number:[0-9]+}", ticket.Solve).Methods("POST")
 
 	r.NotFoundHandler = http.HandlerFunc(notFound)
 

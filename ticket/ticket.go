@@ -111,29 +111,25 @@ func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 }
 
 func Create(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		// Decode form post to Ticket struct
-		t, err := parseNewForm(r)
-		if err != nil {
-			log.Fatalln(err)
-		}
+	// Decode form post to Ticket struct
+	t, err := parseNewForm(r)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-		// Set up timestamp on ticket and comment
-		t.Submitted = time.Now()
-		t.Comment.Timestamp = time.Now()
+	// Set up timestamp on ticket and comment
+	t.Submitted = time.Now()
+	t.Comment.Timestamp = time.Now()
 
-		// Add to database
-		err = t.addToDB()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		// Display submitted text
-		err = view.Render(w, "submitted.gohtml", t)
-		if err != nil {
-			log.Fatalln(err)
-		}
-	} else {
-		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	// Add to database
+	err = t.addToDB()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// Display submitted text
+	err = view.Render(w, "submitted.gohtml", t)
+	if err != nil {
+		log.Fatalln(err)
 	}
 }
 
@@ -169,29 +165,25 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 }
 
 func Solve(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		// Parse "number" variable from URL
-		vars := mux.Vars(r)
-		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// Get specific ticket number
-		t, err := getFromDB(ticketNumber)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// Solve ticket and update it to the database
-		t.Status = StatusSolved
-		err = t.updateToDB()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		// Redirect back to the ticket view
-		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
-	} else {
-		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	// Parse "number" variable from URL
+	vars := mux.Vars(r)
+	ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
+	if err != nil {
+		log.Fatalln(err)
 	}
+
+	// Get specific ticket number
+	t, err := getFromDB(ticketNumber)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Solve ticket and update it to the database
+	t.Status = StatusSolved
+	err = t.updateToDB()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// Redirect back to the ticket view
+	http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
 }
