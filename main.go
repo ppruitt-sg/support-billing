@@ -26,6 +26,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
+	r.StrictSlash(true)
 
 	r.HandleFunc("/", ticket.Home)
 	r.HandleFunc("/new/", ticket.New)
