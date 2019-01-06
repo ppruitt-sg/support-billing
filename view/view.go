@@ -22,11 +22,13 @@ func init() {
 		"ToDate":     toDate,
 	}
 
+	// Parse templates in /template
 	tpl, err = template.New("").Funcs(funcMap).ParseGlob(pwd + "/templates/*.gohtml")
 	if err != nil {
 		log.Panic(err)
 	}
 
+	// Set timezone to "America/Denver"
 	loc, err = time.LoadLocation("America/Denver")
 	if err != nil {
 		log.Panic(err)
@@ -34,6 +36,7 @@ func init() {
 
 }
 
+// Render template with data and included funcmap
 func Render(w http.ResponseWriter, name string, data interface{}) error {
 	err := tpl.ExecuteTemplate(w, name, data)
 	if err != nil {
@@ -43,9 +46,11 @@ func Render(w http.ResponseWriter, name string, data interface{}) error {
 }
 
 func toDateTime(t time.Time) string {
+	// Convert to readable time and date
 	return t.In(loc).Format("January 02 2006 3:04pm MST")
 }
 
 func toDate(t time.Time) string {
+	// Conver to readable time
 	return t.In(loc).Format("Jan _2 2006")
 }

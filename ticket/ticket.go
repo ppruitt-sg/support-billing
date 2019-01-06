@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/schema"
 )
 
+// Ticket structure
 type Ticket struct {
 	Number    int64      `schema:"-"`
 	ZDTicket  int        `schema:"zdticket"`
@@ -24,6 +25,7 @@ type Ticket struct {
 	Comment   comment.Comment `schema:"comment"`
 }
 
+// Tickets page structure for paginating
 type TicketsPage struct {
 	Tickets    []Ticket
 	NextButton bool
@@ -34,6 +36,7 @@ type TicketsPage struct {
 }
 
 func parseNewForm(r *http.Request) (t Ticket, err error) {
+	// Parse the new ticket form in /templates/new.gohtml
 	err = r.ParseForm()
 	if err != nil {
 		return Ticket{}, err
@@ -72,26 +75,33 @@ func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 
 		tp.Status = status
 
+		// Checks for page parameter
 		if keys, ok := r.URL.Query()["page"]; ok {
 			page, err = strconv.ParseInt(keys[0], 10, 64)
 			if err != nil {
 				log.Fatalln(err)
 			}
 		} else {
+			// If it doesn't exist, set page to 1
 			page = 1
 		}
 
+		// Get offset value based off page number
 		offset := getOffsetFromPage(page)
 
+		// Get 10 tickets from page based off offset and status
 		tp.Tickets, err = getNext10FromDB(offset, status)
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		// Include Next Button if there are 10 tickets
 		tp.NextPage = page + 1
 		if len(tp.Tickets) == 10 {
 			tp.NextButton = true
 		}
 
+		// Included Previous Button if this isn't page 1
 		tp.PrevPage = page - 1
 		if page > 1 {
 			tp.PrevButton = true
@@ -129,15 +139,18 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 func Retrieve() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Parse "number" variable from URL
 		vars := mux.Vars(r)
 		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
+		// Get specific ticket number
 		t, err := getFromDB(ticketNumber)
 		if err != nil {
 			switch err {
+			// If the ticket doesn't exist, return 404 and display ticketnotfound.gohtml
 			case sql.ErrNoRows:
 				w.WriteHeader(http.StatusNotFound)
 				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
@@ -147,6 +160,7 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 			}
 		}
 
+		// Render viewticket.gohtml
 		err = view.Render(w, "viewticket.gohtml", t)
 		if err != nil {
 			log.Fatalln(err)
@@ -156,21 +170,26 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 
 func Solve(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
+		// Parse "number" variable from URL
 		vars := mux.Vars(r)
 		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
+		// Get specific ticket number
 		t, err := getFromDB(ticketNumber)
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		// Solve ticket and update it to the database
 		t.Status = StatusSolved
 		err = t.updateToDB()
 		if err != nil {
 			log.Fatalln(err)
 		}
+		// Redirect back to the ticket view
 		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
 	} else {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
