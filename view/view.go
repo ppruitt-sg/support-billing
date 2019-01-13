@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -13,7 +12,6 @@ var tpl *template.Template
 var loc *time.Location
 
 func init() {
-	pwd, _ := os.Getwd()
 	var err error
 
 	funcMap := template.FuncMap{
@@ -23,7 +21,7 @@ func init() {
 	}
 
 	// Parse templates in /template
-	tpl, err = template.New("").Funcs(funcMap).ParseGlob(pwd + "/templates/*.gohtml")
+	tpl, err = template.New("").Funcs(funcMap).ParseGlob("templates/*.gohtml")
 	if err != nil {
 		log.Panic(err)
 	}
