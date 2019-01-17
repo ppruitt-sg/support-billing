@@ -18,6 +18,7 @@ func init() {
 		"ToLower":    strings.ToLower,
 		"ToDateTime": toDateTime,
 		"ToDate":     toDate,
+		"AddBreaks":  addBreaks,
 	}
 
 	// Parse templates in /template
@@ -49,6 +50,11 @@ func toDateTime(t time.Time) string {
 }
 
 func toDate(t time.Time) string {
-	// Conver to readable time
+	// Convert to readable time
 	return t.In(loc).Format("Jan _2 2006")
+}
+
+func addBreaks(s string) template.HTML {
+	// Convert newline to HTML readable line break
+	return template.HTML(strings.Replace(template.HTMLEscapeString(s), "\r\n", "<br>", -1))
 }
