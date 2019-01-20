@@ -2,6 +2,7 @@ package ticket
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -47,6 +48,11 @@ func parseNewForm(r *http.Request) (t Ticket, err error) {
 	err = decoder.Decode(&t, r.PostForm)
 	if err != nil {
 		return Ticket{}, err
+	}
+
+	// Check max length of comment
+	if len(t.Comment.Text) > 255 {
+		return t, errors.New("Comment exceeds max width (255 characters)")
 	}
 
 	return t, nil
