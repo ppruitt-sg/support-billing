@@ -65,6 +65,26 @@ func TestViewTicketHandler(t *testing.T) {
 	}
 }
 
+func TestSolveTicketHandler(t *testing.T) {
+	var err error
+	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
+
+	r := mux.NewRouter()
+	r.HandleFunc("/solve/{number}", ticket.Solve)
+	r.HandleFunc("/view/{number}", ticket.Retrieve())
+
+	rr := httptest.NewServer(r)
+
+	url := rr.URL + "/solve/1"
+	resp, err := http.Post(url, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if status := resp.StatusCode; status != http.StatusOK {
+		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
+	}
+}
 func TestViewOpenHandler(t *testing.T) {
 	var err error
 	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
@@ -107,4 +127,109 @@ func TestViewSolvedHandler(t *testing.T) {
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
 	}
+}
+
+// Benchmarks
+func BenchmarkNewHandler(b *testing.B) {
+	req, err := http.NewRequest("GET", "/new", nil)
+
+	if err != nil {
+		b.Errorf("An error occurred. %v", err)
+	}
+
+	for i := 0; i < b.N; i++ {
+		rr := httptest.NewRecorder()
+		http.HandlerFunc(ticket.New).ServeHTTP(rr, req)
+	}
+}
+
+func BenchmarkHomeHandler(b *testing.B) {
+	req, err := http.NewRequest("GET", "/", nil)
+
+	if err != nil {
+		b.Errorf("An error occurred. %v", err)
+	}
+
+	for i := 0; i < b.N; i++ {
+		rr := httptest.NewRecorder()
+		http.HandlerFunc(ticket.New).ServeHTTP(rr, req)
+	}
+}
+
+func BenchmarkViewTicketHandler(b *testing.B) {
+	var err error
+	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	r := mux.NewRouter()
+	r.HandleFunc("/solve/{number}", ticket.Retrieve())
+
+	rr := httptest.NewServer(r)
+	defer rr.Close()
+	for i := 0; i < b.N; i++ {
+		resp, _ := http.Post(rr.URL+"/solve/1", "", nil)
+		resp.Body.Close()
+	}
+
+}
+
+func BenchmarkSolveTicketHandler(b *testing.B) {
+	var err error
+	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	r := mux.NewRouter()
+	r.HandleFunc("/view/{number}", func(http.ResponseWriter, *http.Request) {})
+	r.HandleFunc("/solve/{number}", ticket.Solve)
+
+	rr := httptest.NewServer(r)
+	defer rr.Close()
+	for i := 0; i < b.N; i++ {
+		resp, _ := http.Post(rr.URL+"/solve/1", "", nil)
+		resp.Body.Close()
+	}
+
+}
+
+func BenchmarkViewOpenHandler(b *testing.B) {
+	var err error
+	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	req, err := http.NewRequest("GET", "/view/open", nil)
+
+	if err != nil {
+		b.Errorf("An error occurred. %v", err)
+	}
+	rr := httptest.NewRecorder()
+	for i := 0; i < b.N; i++ {
+		http.HandlerFunc(ticket.Retrieve10(ticket.StatusOpen)).ServeHTTP(rr, req)
+	}
+
+}
+
+func BenchmarkViewSolvedHandler(b *testing.B) {
+	var err error
+	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	req, err := http.NewRequest("GET", "/view/solved", nil)
+
+	if err != nil {
+		b.Errorf("An error occurred. %v", err)
+	}
+
+	rr := httptest.NewRecorder()
+	for i := 0; i < b.N; i++ {
+		http.HandlerFunc(ticket.Retrieve10(ticket.StatusSolved)).ServeHTTP(rr, req)
+	}
+
 }
