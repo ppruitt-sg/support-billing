@@ -36,6 +36,11 @@ type TicketsPage struct {
 	Status     StatusType
 }
 
+func logError(err error, w http.ResponseWriter) {
+	log.Println(err)
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
 func parseNewForm(r *http.Request) (t Ticket, err error) {
 	// Parse the new ticket form in /templates/new.gohtml
 	err = r.ParseForm()
@@ -85,7 +90,8 @@ func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 		if keys, ok := r.URL.Query()["page"]; ok {
 			page, err = strconv.ParseInt(keys[0], 10, 64)
 			if err != nil {
-				log.Fatalln(err)
+				logError(err, w)
+				return
 			}
 		} else {
 			// If it doesn't exist, set page to 1
@@ -98,7 +104,8 @@ func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 		// Get 10 tickets from page based off offset and status
 		tp.Tickets, err = getNext10FromDB(offset, status)
 		if err != nil {
-			log.Fatalln(err)
+			logError(err, w)
+			return
 		}
 
 		// Include Next Button if there are 10 tickets
@@ -120,7 +127,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	// Decode form post to Ticket struct
 	t, err := parseNewForm(r)
 	if err != nil {
-		log.Fatalln(err)
+		logError(err, w)
+		return
 	}
 
 	// Set up timestamp on ticket and comment
@@ -130,12 +138,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	// Add to database
 	err = t.addToDB()
 	if err != nil {
-		log.Fatalln(err)
+		logError(err, w)
+		return
 	}
 	// Display submitted text
 	err = view.Render(w, "submitted.gohtml", t)
 	if err != nil {
-		log.Fatalln(err)
+		logError(err, w)
+		return
 	}
 }
 
@@ -145,7 +155,8 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 		vars := mux.Vars(r)
 		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
 		if err != nil {
-			log.Fatalln(err)
+			logError(err, w)
+			return
 		}
 
 		// Get specific ticket number
@@ -156,16 +167,18 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 			case sql.ErrNoRows:
 				w.WriteHeader(http.StatusNotFound)
 				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
-				return
+
 			default:
-				log.Fatalln(err)
+				logError(err, w)
+				return
 			}
 		}
 
 		// Render viewticket.gohtml
 		err = view.Render(w, "viewticket.gohtml", t)
 		if err != nil {
-			log.Fatalln(err)
+			logError(err, w)
+			return
 		}
 	}
 }
@@ -175,20 +188,23 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
 	if err != nil {
-		log.Fatalln(err)
+		logError(err, w)
+		return
 	}
 
 	// Get specific ticket number
 	t, err := getFromDB(ticketNumber)
 	if err != nil {
-		log.Fatalln(err)
+		logError(err, w)
+		return
 	}
 
 	// Solve ticket and update it to the database
 	t.Status = StatusSolved
 	err = t.updateToDB()
 	if err != nil {
-		log.Fatalln(err)
+		logError(err, w)
+		return
 	}
 	// Redirect back to the ticket view
 	http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
