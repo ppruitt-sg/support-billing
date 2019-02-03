@@ -3,6 +3,7 @@ package ticket
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -36,8 +37,9 @@ type TicketsPage struct {
 	Status     StatusType
 }
 
-func logError(err error, w http.ResponseWriter) {
-	log.Println(err)
+func logError(action string, err error, w http.ResponseWriter) {
+	// Print action and error message
+	log.Printf("Error - %s - %v", action, err)
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
@@ -90,7 +92,7 @@ func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 		if keys, ok := r.URL.Query()["page"]; ok {
 			page, err = strconv.ParseInt(keys[0], 10, 64)
 			if err != nil {
-				logError(err, w)
+				logError("Parsing page parameter", err, w)
 				return
 			}
 		} else {
@@ -104,7 +106,7 @@ func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 		// Get 10 tickets from page based off offset and status
 		tp.Tickets, err = getNext10FromDB(offset, status)
 		if err != nil {
-			logError(err, w)
+			logError(fmt.Sprintf("Getting 10 tickets for page %d", page), err, w)
 			return
 		}
 
@@ -127,7 +129,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	// Decode form post to Ticket struct
 	t, err := parseNewForm(r)
 	if err != nil {
-		logError(err, w)
+		logError("Parsing new ticket form", err, w)
 		return
 	}
 
@@ -138,13 +140,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	// Add to database
 	err = t.addToDB()
 	if err != nil {
-		logError(err, w)
+		logError("Adding ticket to database", err, w)
 		return
 	}
 	// Display submitted text
-	err = view.Render(w, "submitted.gohtml", t)
+	tpl := "submitted.gohtml"
+	err = view.Render(w, tpl, t)
 	if err != nil {
-		logError(err, w)
+		logError(fmt.Sprintf("Displaying %s template", tpl), err, w)
 		return
 	}
 }
@@ -155,7 +158,7 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 		vars := mux.Vars(r)
 		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
 		if err != nil {
-			logError(err, w)
+			logError("Parsing number from URL", err, w)
 			return
 		}
 
@@ -169,15 +172,16 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
 
 			default:
-				logError(err, w)
+				logError("Getting ticket from DB", err, w)
 				return
 			}
 		}
 
 		// Render viewticket.gohtml
-		err = view.Render(w, "viewticket.gohtml", t)
+		tpl := "viewticket.gohtml"
+		err = view.Render(w, tpl, t)
 		if err != nil {
-			logError(err, w)
+			logError(fmt.Sprintf("Rendering %s template", tpl), err, w)
 			return
 		}
 	}
@@ -188,14 +192,14 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
 	if err != nil {
-		logError(err, w)
+		logError("Parsing number from URL", err, w)
 		return
 	}
 
 	// Get specific ticket number
 	t, err := getFromDB(ticketNumber)
 	if err != nil {
-		logError(err, w)
+		logError(fmt.Sprintf("Getting ticket %d from database", ticketNumber), err, w)
 		return
 	}
 
@@ -203,7 +207,7 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 	t.Status = StatusSolved
 	err = t.updateToDB()
 	if err != nil {
-		logError(err, w)
+		logError(fmt.Sprintf("Updating ticket %d in database", ticketNumber), err, w)
 		return
 	}
 	// Redirect back to the ticket view
