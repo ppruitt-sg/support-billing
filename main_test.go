@@ -82,23 +82,33 @@ func TestViewTicketHandler(t *testing.T) {
 }
 
 func TestSolveTicketHandler(t *testing.T) {
-	var err error
-	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
-
+	var tests = []struct {
+		n        string // ticket number
+		expected int
+	}{
+		{"1", 200},                       // Existing ticket
+		{"", 404},                        // Blank ticket
+		{"25325235235235235235253", 500}, // Ticket too long
+		{"0", 404},
+		{"65000", 404},
+	}
+	database.DBCon, _ = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
 	r := mux.NewRouter()
 	r.HandleFunc("/solve/{number}", ticket.Solve)
 	r.HandleFunc("/view/{number}", ticket.Retrieve())
 
 	rr := httptest.NewServer(r)
 
-	url := rr.URL + "/solve/1"
-	resp, err := http.Post(url, "", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	for _, test := range tests {
+		url := rr.URL + "/view/" + test.n
+		resp, err := http.Post(url, "", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	if status := resp.StatusCode; status != http.StatusOK {
-		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
+		if status := resp.StatusCode; status != test.expected {
+			t.Errorf("Status code differs for %s. Expected %d .\n Got %d instead", test.n, test.expected, status)
+		}
 	}
 }
 func TestViewOpenHandler(t *testing.T) {
