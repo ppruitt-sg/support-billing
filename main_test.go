@@ -8,6 +8,10 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	_ "github.com/go-sql-driver/mysql"
 
 	"./database"
 	"./ticket"
@@ -15,34 +19,28 @@ import (
 
 func TestNewHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "/new", nil)
-
-	if err != nil {
-		t.Errorf("An error occurred. %v", err)
-	}
-
 	rr := httptest.NewRecorder()
+
+	require.Nil(t, err)
+	require.NotNil(t, req)
+	require.NotNil(t, rr)
 
 	http.HandlerFunc(ticket.New).ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
-	}
+	assert.Equal(t, rr.Code, http.StatusOK)
 }
 
 func TestHomeHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "/", nil)
-
-	if err != nil {
-		t.Errorf("An error occurred. %v", err)
-	}
-
 	rr := httptest.NewRecorder()
+
+	require.Nil(t, err)
+	require.NotNil(t, req)
+	require.NotNil(t, rr)
 
 	http.HandlerFunc(ticket.Home).ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
-	}
+	assert.Equal(t, rr.Code, http.StatusOK)
 }
 
 func TestViewTicketHandler(t *testing.T) {
@@ -59,25 +57,23 @@ func TestViewTicketHandler(t *testing.T) {
 	}
 
 	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	r := mux.NewRouter()
+
 	r.HandleFunc("/view/{number}", ticket.Retrieve())
 
 	rr := httptest.NewServer(r)
 
+	require.Nil(t, err)
+	require.NotNil(t, database.DBCon)
+	require.NotNil(t, r)
+	require.NotNil(t, rr)
+
 	for _, test := range tests {
 		url := rr.URL + "/view/" + test.n
 		resp, err := http.Get(url)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.Nil(t, err)
 
-		if status := resp.StatusCode; status != test.expected {
-			t.Errorf("Status code differs for %s. Expected %d .\n Got %d instead", test.n, test.expected, status)
-		}
+		assert.Equal(t, resp.StatusCode, test.expected)
 	}
 }
 
@@ -99,16 +95,16 @@ func TestSolveTicketHandler(t *testing.T) {
 
 	rr := httptest.NewServer(r)
 
+	require.NotNil(t, database.DBCon)
+	require.NotNil(t, r)
+	require.NotNil(t, rr)
+
 	for _, test := range tests {
 		url := rr.URL + "/view/" + test.n
 		resp, err := http.Post(url, "", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.Nil(t, err)
 
-		if status := resp.StatusCode; status != test.expected {
-			t.Errorf("Status code differs for %s. Expected %d .\n Got %d instead", test.n, test.expected, status)
-		}
+		assert.Equal(t, resp.StatusCode, test.expected)
 	}
 }
 func TestViewOpenHandler(t *testing.T) {
