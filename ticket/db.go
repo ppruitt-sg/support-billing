@@ -103,3 +103,34 @@ func getNext10FromDB(offset int64, status StatusType) (ts []Ticket, err error) {
 	}
 	return ts, nil
 }
+
+func getMCTicketsFromDB(startTime int64, endTime int64) (ts []Ticket, err error) {
+	query := `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
+		FROM tickets 
+		WHERE issue=4
+		AND submitted >= ?
+		AND submitted < ?`
+	_ = query
+
+	r, err := database.DBCon.Query(query, startTime, endTime)
+	if err != nil {
+		return ts, err
+	}
+
+	t := Ticket{}
+	var timestamp int64
+	// Create tickets and add to tickets slice
+	for r.Next() {
+		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
+		if err != nil {
+			return ts, err
+		}
+		// Convert int64 to time.Time
+		t.Submitted = time.Unix(timestamp, 0)
+		ts = append(ts, t)
+	}
+	if r.Err() != nil {
+		return ts, err
+	}
+	return ts, nil
+}

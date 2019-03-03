@@ -187,6 +187,26 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 	}
 }
 
+func RetrieveMCTickets(w http.ResponseWriter, r *http.Request) {
+	currentMonth := time.Now()
+	pacific, err := time.LoadLocation("America/Los_Angeles")
+	startOfCurrentMonth := time.Date(currentMonth.Year(), currentMonth.Month(), 1, 0, 0, 0, 0, pacific)
+	startOfNextMonth := startOfCurrentMonth.AddDate(0, 1, 0)
+
+	ts, err := getMCTicketsFromDB(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
+	if err != nil {
+		logError("Retrieving contacts from URL", err, w)
+	}
+
+	fmt.Println(startOfCurrentMonth.Unix())
+	fmt.Println(startOfNextMonth.Unix())
+
+	for _, t := range ts {
+		w.Write([]byte(strconv.Itoa(t.UserID)))
+		w.Write([]byte("\n"))
+	}
+}
+
 func Solve(w http.ResponseWriter, r *http.Request) {
 	// Parse "number" variable from URL
 	vars := mux.Vars(r)

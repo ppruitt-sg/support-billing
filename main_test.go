@@ -151,7 +151,31 @@ func TestViewSolvedHandler(t *testing.T) {
 	}
 }
 
+func TestRetrieveMCTickets(t *testing.T) {
+	var err error
+	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("GET", "/admin/mctickets", nil)
+
+	if err != nil {
+		t.Errorf("An error occurred. %v", err)
+	}
+
+	rr := httptest.NewRecorder()
+
+	http.HandlerFunc(ticket.RetrieveMCTickets).ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
+	}
+}
+
+/*************************************************************
 // Benchmarks
+*************************************************************/
 func BenchmarkNewHandler(b *testing.B) {
 	req, err := http.NewRequest("GET", "/new", nil)
 
