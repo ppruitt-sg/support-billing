@@ -37,6 +37,20 @@ type TicketsPage struct {
 	Status     StatusType
 }
 
+func RetrieveMCTickets() ([]Ticket, error) {
+	currentMonth := time.Now()
+	pacific, err := time.LoadLocation("America/Los_Angeles")
+	startOfCurrentMonth := time.Date(currentMonth.Year(), currentMonth.Month(), 1, 0, 0, 0, 0, pacific)
+	startOfNextMonth := startOfCurrentMonth.AddDate(0, 1, 0)
+
+	ts, err := getMCTicketsFromDB(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
+	if err != nil {
+		return ts, err
+	}
+
+	return ts, nil
+}
+
 func logError(action string, err error, w http.ResponseWriter) {
 	// Print action and error message
 	log.Printf("Error - %s - %v", action, err)
@@ -184,26 +198,6 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 			logError(fmt.Sprintf("Rendering %s template", tpl), err, w)
 			return
 		}
-	}
-}
-
-func RetrieveMCTickets(w http.ResponseWriter, r *http.Request) {
-	currentMonth := time.Now()
-	pacific, err := time.LoadLocation("America/Los_Angeles")
-	startOfCurrentMonth := time.Date(currentMonth.Year(), currentMonth.Month(), 1, 0, 0, 0, 0, pacific)
-	startOfNextMonth := startOfCurrentMonth.AddDate(0, 1, 0)
-
-	ts, err := getMCTicketsFromDB(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
-	if err != nil {
-		logError("Retrieving contacts from URL", err, w)
-	}
-
-	fmt.Println(startOfCurrentMonth.Unix())
-	fmt.Println(startOfNextMonth.Unix())
-
-	for _, t := range ts {
-		w.Write([]byte(strconv.Itoa(t.UserID)))
-		w.Write([]byte("\n"))
 	}
 }
 

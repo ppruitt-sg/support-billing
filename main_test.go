@@ -13,6 +13,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
+	"./admin"
 	"./database"
 	"./ticket"
 )
@@ -151,14 +152,14 @@ func TestViewSolvedHandler(t *testing.T) {
 	}
 }
 
-func TestRetrieveMCTickets(t *testing.T) {
+func TestAdmin(t *testing.T) {
 	var err error
 	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest("GET", "/admin/mctickets", nil)
+	req, err := http.NewRequest("GET", "/admin", nil)
 
 	if err != nil {
 		t.Errorf("An error occurred. %v", err)
@@ -166,7 +167,7 @@ func TestRetrieveMCTickets(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	http.HandlerFunc(ticket.RetrieveMCTickets).ServeHTTP(rr, req)
+	http.HandlerFunc(admin.Admin).ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)

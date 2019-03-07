@@ -1,6 +1,7 @@
 package ticket
 
 import (
+	"fmt"
 	"time"
 
 	"../database"
@@ -105,11 +106,13 @@ func getNext10FromDB(offset int64, status StatusType) (ts []Ticket, err error) {
 }
 
 func getMCTicketsFromDB(startTime int64, endTime int64) (ts []Ticket, err error) {
-	query := `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
-		FROM tickets 
-		WHERE issue=4
-		AND submitted >= ?
-		AND submitted < ?`
+	query := `SELECT t.ticket_id, t.zdticket, t.userid, t.issue, t.initials, t.status, t.submitted, c.text 
+		FROM tickets t
+		INNER JOIN
+		comments c ON t.ticket_id = c.ticket_id
+		WHERE t.issue=4
+		AND t.submitted >= ?
+		AND t.submitted < ?`
 	_ = query
 
 	r, err := database.DBCon.Query(query, startTime, endTime)
@@ -121,13 +124,14 @@ func getMCTicketsFromDB(startTime int64, endTime int64) (ts []Ticket, err error)
 	var timestamp int64
 	// Create tickets and add to tickets slice
 	for r.Next() {
-		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
+		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp, &t.Comment.Text)
 		if err != nil {
 			return ts, err
 		}
 		// Convert int64 to time.Time
 		t.Submitted = time.Unix(timestamp, 0)
 		ts = append(ts, t)
+		fmt.Println("WORKS")
 	}
 	if r.Err() != nil {
 		return ts, err

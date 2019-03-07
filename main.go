@@ -7,6 +7,7 @@ import (
 
 	"database/sql"
 
+	"./admin"
 	"./database"
 	"./ticket"
 	"./view"
@@ -35,7 +36,7 @@ func main() {
 	r.HandleFunc("/view/solved/", ticket.Retrieve10(ticket.StatusSolved)).Methods("GET")
 	r.HandleFunc("/view/{number:[0-9]+}", ticket.Retrieve()).Methods("GET")
 	r.HandleFunc("/solve/{number:[0-9]+}", ticket.Solve).Methods("POST")
-	r.HandleFunc("/admin/mctickets", ticket.RetrieveMCTickets).Methods("GET")
+	r.HandleFunc("/admin", admin.Admin).Methods("GET")
 
 	r.NotFoundHandler = http.HandlerFunc(notFound)
 

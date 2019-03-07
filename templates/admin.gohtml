@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF=8">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide.css" rel="stylesheet">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide-grid.css" rel="stylesheet">
+<link href="/assets/css/style.css" rel="stylesheet">
+<script src="/assets/js/AutoExpand.js"></script>
+
+<title>Admin</title>
+</head>
+<body>
+<div class="body">
+    {{template "header"}}
+    <div class="row">
+        <div class="col-10 col-start-2">
+            <h1>Admin</h1>
+        </div>
+        <div class="col-9 col-start-3">
+            <h2>MC Contact UserIDs and comments for this month:</h2>
+            {{range . }}
+            <p>{{.UserID}} - {{.Comment.Text}}</p>
+            {{end}}
+        </div>
+</div>
+</body>
+</html>
