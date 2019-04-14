@@ -1,8 +1,6 @@
-package comment
+package database
 
-import (
-	"time"
-)
+import "time"
 
 type Comment struct {
 	Timestamp    time.Time
@@ -10,28 +8,28 @@ type Comment struct {
 	TicketNumber int64
 }
 
-/*func (c Comment) AddToDB() (err error) {
+func (d *DB) AddCommentToDB(c Comment) (err error) {
 	query := `INSERT INTO comments (timestamp, text, ticket_id)
 		VALUES (?, ?, ?)`
-	_, err = database.DBCon.Exec(query, c.Timestamp.Unix(), c.Text, c.TicketNumber)
+	_, err = d.Exec(query, c.Timestamp.Unix(), c.Text, c.TicketNumber)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Comment) GetFromDB(num int64) (err error) {
+func (d *DB) GetCommentFromDB(num int64) (c Comment, err error) {
 	query := `SELECT timestamp, text, ticket_id FROM comments
 		WHERE ticket_id=?`
 
-	r := database.DBCon.QueryRow(query, num)
+	r := d.QueryRow(query, num)
 	var ts int64
 	err = r.Scan(&ts, &c.Text, &c.TicketNumber)
 	if err != nil {
-		return err
+		return c, err
 	}
 
 	c.Timestamp = time.Unix(ts, 0)
 
-	return nil
-}*/
+	return c, nil
+}

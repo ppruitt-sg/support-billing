@@ -1,5 +1,6 @@
 package ticket
 
+/*
 type IssueType int
 
 const (
@@ -26,3 +27,4 @@ func (i IssueType) ToString() string {
 		return ""
 	}
 }
+*/

@@ -1,5 +1,6 @@
 package ticket
 
+/*
 type StatusType int
 
 const (
@@ -17,3 +18,4 @@ func (s StatusType) ToString() string {
 		return ""
 	}
 }
+*/

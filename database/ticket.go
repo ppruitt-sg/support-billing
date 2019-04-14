@@ -1,13 +1,68 @@
-package ticket
+package database
 
 import (
 	"fmt"
 	"time"
-
-	"../database"
 )
 
-func (t Ticket) updateToDB() error {
+// Ticket structure
+type Ticket struct {
+	Number    int64      `schema:"-"`
+	ZDTicket  int        `schema:"zdticket"`
+	UserID    int        `schema:"userid"`
+	Issue     IssueType  `schema:"issue"`
+	Initials  string     `schema:"initials"`
+	Status    StatusType `schema:"-"`
+	Submitted time.Time
+	Comment   Comment `schema:"comment"`
+}
+
+type IssueType int
+
+const (
+	Refund     IssueType = 0
+	Terminated IssueType = 1
+	DNAFP      IssueType = 2
+	Extension  IssueType = 3
+	MCContacts IssueType = 4
+)
+
+func (i IssueType) ToString() string {
+	switch i {
+	case 0:
+		return "Refund"
+	case 1:
+		return "Billing Terminated"
+	case 2:
+		return "DNA FP"
+	case 3:
+		return "Extension"
+	case 4:
+		return "MC Contacts"
+	default:
+		return ""
+	}
+}
+
+type StatusType int
+
+const (
+	StatusOpen   StatusType = 0
+	StatusSolved StatusType = 1
+)
+
+func (s StatusType) ToString() string {
+	switch s {
+	case 0:
+		return "Open"
+	case 1:
+		return "Solved"
+	default:
+		return ""
+	}
+}
+
+func (d *DB) UpdateTicketToDB(t Ticket) error {
 	query := `UPDATE tickets
 		SET zdticket=?,
 		userid=?,
@@ -16,7 +71,7 @@ func (t Ticket) updateToDB() error {
 		status=?
 		WHERE ticket_id=?`
 
-	_, err := database.DBCon.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Number)
+	_, err := d.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Number)
 	if err != nil {
 		return err
 	}
@@ -25,31 +80,31 @@ func (t Ticket) updateToDB() error {
 
 }
 
-func (t *Ticket) addToDB() error {
+func (d *DB) AddTicketToDB(t Ticket) (Ticket, error) {
 	query := `INSERT INTO tickets (zdticket, userid, issue, initials, status, submitted)
 		VALUES (?, ?, ?, ?, ?, ?);`
-	result, err := database.DBCon.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Submitted.Unix())
+	result, err := d.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Submitted.Unix())
 	if err != nil {
-		return err
+		return t, err
 	}
 	t.Number, err = result.LastInsertId()
 	if err != nil {
-		return err
+		return t, err
 	}
 	t.Comment.TicketNumber = t.Number
 
-	err = t.Comment.AddToDB()
+	err = d.AddCommentToDB(t.Comment)
 	if err != nil {
-		return err
+		return t, err
 	}
 
-	return nil
+	return t, nil
 }
 
-func getFromDB(num int64) (Ticket, error) {
+func (d *DB) GetTicketFromDB(num int64) (Ticket, error) {
 	query := `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted FROM tickets
 		WHERE ticket_id=?`
-	r := database.DBCon.QueryRow(query, num)
+	r := d.QueryRow(query, num)
 	t := Ticket{}
 	var timestamp int64
 	err := r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
@@ -58,7 +113,7 @@ func getFromDB(num int64) (Ticket, error) {
 	}
 	t.Submitted = time.Unix(timestamp, 0)
 
-	err = t.Comment.GetFromDB(num)
+	t.Comment, err = d.GetCommentFromDB(num)
 	if err != nil {
 		return Ticket{}, err
 	}
@@ -66,7 +121,7 @@ func getFromDB(num int64) (Ticket, error) {
 	return t, nil
 }
 
-func getNext10FromDB(offset int64, status StatusType) (ts []Ticket, err error) {
+func (d *DB) GetNext10TicketsFromDB(offset int64, status StatusType) (ts []Ticket, err error) {
 	// Select rows with limit
 	var query string
 	switch status {
@@ -82,7 +137,7 @@ func getNext10FromDB(offset int64, status StatusType) (ts []Ticket, err error) {
 		ORDER BY ticket_id DESC
 		LIMIT ?, 10`
 	}
-	r, err := database.DBCon.Query(query, status, offset)
+	r, err := d.Query(query, status, offset)
 	if err != nil {
 		return ts, err
 	}
@@ -105,7 +160,7 @@ func getNext10FromDB(offset int64, status StatusType) (ts []Ticket, err error) {
 	return ts, nil
 }
 
-func getMCTicketsFromDB(startTime int64, endTime int64) (ts []Ticket, err error) {
+func (d *DB) GetMCTicketsFromDB(startTime int64, endTime int64) (ts []Ticket, err error) {
 	query := `SELECT t.ticket_id, t.zdticket, t.userid, t.issue, t.initials, t.status, t.submitted, c.text 
 		FROM tickets t
 		INNER JOIN
@@ -115,7 +170,7 @@ func getMCTicketsFromDB(startTime int64, endTime int64) (ts []Ticket, err error)
 		AND t.submitted < ?`
 	_ = query
 
-	r, err := database.DBCon.Query(query, startTime, endTime)
+	r, err := d.Query(query, startTime, endTime)
 	if err != nil {
 		return ts, err
 	}

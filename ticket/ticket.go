@@ -9,41 +9,29 @@ import (
 	"strconv"
 	"time"
 
-	"../comment"
+	"../database"
 	"../view"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 )
 
-// Ticket structure
-type Ticket struct {
-	Number    int64      `schema:"-"`
-	ZDTicket  int        `schema:"zdticket"`
-	UserID    int        `schema:"userid"`
-	Issue     IssueType  `schema:"issue"`
-	Initials  string     `schema:"initials"`
-	Status    StatusType `schema:"-"`
-	Submitted time.Time
-	Comment   comment.Comment `schema:"comment"`
-}
-
 // Tickets page structure for paginating
 type TicketsPage struct {
-	Tickets    []Ticket
+	Tickets    []database.Ticket
 	NextButton bool
 	NextPage   int64
 	PrevPage   int64
 	PrevButton bool
-	Status     StatusType
+	Status     database.StatusType
 }
 
-func RetrieveMCTickets() ([]Ticket, error) {
+func RetrieveMCTickets(d database.Datastore) ([]database.Ticket, error) {
 	currentMonth := time.Now()
 	pacific, err := time.LoadLocation("America/Los_Angeles")
 	startOfCurrentMonth := time.Date(currentMonth.Year(), currentMonth.Month(), 1, 0, 0, 0, 0, pacific)
 	startOfNextMonth := startOfCurrentMonth.AddDate(0, 1, 0)
 
-	ts, err := getMCTicketsFromDB(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
+	ts, err := d.GetMCTicketsFromDB(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
 	if err != nil {
 		return ts, err
 	}
@@ -57,18 +45,18 @@ func logError(action string, err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
-func parseNewForm(r *http.Request) (t Ticket, err error) {
+func parseNewForm(r *http.Request) (t database.Ticket, err error) {
 	// Parse the new ticket form in /templates/new.gohtml
 	err = r.ParseForm()
 	if err != nil {
-		return Ticket{}, err
+		return t, err
 	}
 
 	decoder := schema.NewDecoder()
 
 	err = decoder.Decode(&t, r.PostForm)
 	if err != nil {
-		return Ticket{}, err
+		return t, err
 	}
 
 	// Check max length of comment
@@ -94,7 +82,7 @@ func getOffsetFromPage(page int64) int64 {
 	return page*10 - 10
 }
 
-func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
+func Retrieve10(d database.Datastore, status database.StatusType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var page int64
 		var tp TicketsPage
@@ -118,7 +106,7 @@ func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 		offset := getOffsetFromPage(page)
 
 		// Get 10 tickets from page based off offset and status
-		tp.Tickets, err = getNext10FromDB(offset, status)
+		tp.Tickets, err = d.GetNext10TicketsFromDB(offset, status)
 		if err != nil {
 			logError(fmt.Sprintf("Getting 10 tickets for page %d", page), err, w)
 			return
@@ -139,34 +127,36 @@ func Retrieve10(status StatusType) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func Create(w http.ResponseWriter, r *http.Request) {
-	// Decode form post to Ticket struct
-	t, err := parseNewForm(r)
-	if err != nil {
-		logError("Parsing new ticket form", err, w)
-		return
-	}
+func Create(d database.Datastore) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Decode form post to Ticket struct
+		t, err := parseNewForm(r)
+		if err != nil {
+			logError("Parsing new ticket form", err, w)
+			return
+		}
 
-	// Set up timestamp on ticket and comment
-	t.Submitted = time.Now()
-	t.Comment.Timestamp = time.Now()
+		// Set up timestamp on ticket and comment
+		t.Submitted = time.Now()
+		t.Comment.Timestamp = time.Now()
 
-	// Add to database
-	err = t.addToDB()
-	if err != nil {
-		logError("Adding ticket to database", err, w)
-		return
-	}
-	// Display submitted text
-	tpl := "submitted.gohtml"
-	err = view.Render(w, tpl, t)
-	if err != nil {
-		logError(fmt.Sprintf("Displaying %s template", tpl), err, w)
-		return
+		// Add to database
+		t, err = d.AddTicketToDB(t)
+		if err != nil {
+			logError("Adding ticket to database", err, w)
+			return
+		}
+		// Display submitted text
+		tpl := "submitted.gohtml"
+		err = view.Render(w, tpl, t)
+		if err != nil {
+			logError(fmt.Sprintf("Displaying %s template", tpl), err, w)
+			return
+		}
 	}
 }
 
-func Retrieve() func(http.ResponseWriter, *http.Request) {
+func Retrieve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Parse "number" variable from URL
 		vars := mux.Vars(r)
@@ -177,7 +167,7 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 		}
 
 		// Get specific ticket number
-		t, err := getFromDB(ticketNumber)
+		t, err := d.GetTicketFromDB(ticketNumber)
 		if err != nil {
 			switch err {
 			// If the ticket doesn't exist, return 404 and display ticketnotfound.gohtml
@@ -201,29 +191,31 @@ func Retrieve() func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func Solve(w http.ResponseWriter, r *http.Request) {
-	// Parse "number" variable from URL
-	vars := mux.Vars(r)
-	ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
-	if err != nil {
-		logError("Parsing number from URL", err, w)
-		return
-	}
+func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Parse "number" variable from URL
+		vars := mux.Vars(r)
+		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
+		if err != nil {
+			logError("Parsing number from URL", err, w)
+			return
+		}
 
-	// Get specific ticket number
-	t, err := getFromDB(ticketNumber)
-	if err != nil {
-		logError(fmt.Sprintf("Getting ticket %d from database", ticketNumber), err, w)
-		return
-	}
+		// Get specific ticket number
+		t, err := d.GetTicketFromDB(ticketNumber)
+		if err != nil {
+			logError(fmt.Sprintf("Getting ticket %d from database", ticketNumber), err, w)
+			return
+		}
 
-	// Solve ticket and update it to the database
-	t.Status = StatusSolved
-	err = t.updateToDB()
-	if err != nil {
-		logError(fmt.Sprintf("Updating ticket %d in database", ticketNumber), err, w)
-		return
+		// Solve ticket and update it to the database
+		t.Status = database.StatusSolved
+		err = d.UpdateTicketToDB(t)
+		if err != nil {
+			logError(fmt.Sprintf("Updating ticket %d in database", ticketNumber), err, w)
+			return
+		}
+		// Redirect back to the ticket view
+		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
 	}
-	// Redirect back to the ticket view
-	http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
 }

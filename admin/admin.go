@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"../database"
 	"../ticket"
 	"../view"
 )
@@ -14,12 +15,13 @@ func logError(action string, err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
-func Admin(w http.ResponseWriter, r *http.Request) {
-	ts, err := ticket.RetrieveMCTickets()
-	if err != nil {
-		logError("Error retrieving MC Tickets", err, w)
+func Admin(d database.Datastore) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ts, err := ticket.RetrieveMCTickets(d)
+		if err != nil {
+			logError("Error retrieving MC Tickets", err, w)
+		}
+		_ = ts
+		view.Render(w, "admin.gohtml", ts)
 	}
-	_ = ts
-	view.Render(w, "admin.gohtml", ts)
-
 }
