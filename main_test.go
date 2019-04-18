@@ -12,59 +12,48 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"./admin"
-	"./database"
-	"./ticket"
+	. "./structs"
+
+	"./routes"
 )
 
-/*******************************
+////////////////////////////////
 // Mock DB
-*******************************/
+////////////////////////////////
 type mockDB struct {
 }
 
-/*type Datastore interface {
-	// Comment
-	AddCommentToDB(Comment) error
-	GetCommentFromDB(int64) (Comment, error)
-	// Ticket
-	UpdateTicketToDB(Ticket) error
-	AddTicketToDB(Ticket) (Ticket, error)
-	GetTicketFromDB(int64) (Ticket, error)
-	GetNext10TicketsFromDB(int64, StatusType) ([]Ticket, error)
-	GetMCTicketsFromDB(int64, int64) ([]Ticket, error)
-}*/
-func (d mockDB) AddCommentToDB(c database.Comment) error {
+func (d mockDB) AddCommentToDB(c Comment) error {
 	return nil
 }
 
-func (d mockDB) GetCommentFromDB(stamp int64) (database.Comment, error) {
-	return database.Comment{
+func (d mockDB) GetCommentFromDB(stamp int64) (Comment, error) {
+	return Comment{
 		Timestamp:    time.Unix(stamp, 0),
 		Text:         "Hello",
 		TicketNumber: 1,
 	}, nil
 }
 
-func (d mockDB) UpdateTicketToDB(t database.Ticket) error {
+func (d mockDB) UpdateTicketToDB(t Ticket) error {
 	return nil
 }
 
-func (d mockDB) AddTicketToDB(t database.Ticket) (database.Ticket, error) {
+func (d mockDB) AddTicketToDB(t Ticket) (Ticket, error) {
 	t.Number = 1
 	return t, nil
 }
 
-func (d mockDB) GetTicketFromDB(number int64) (database.Ticket, error) {
-	return database.Ticket{
+func (d mockDB) GetTicketFromDB(number int64) (Ticket, error) {
+	return Ticket{
 		Number:    1,
 		ZDTicket:  1234,
 		UserID:    5678,
-		Issue:     database.Refund,
+		Issue:     Refund,
 		Initials:  "PP",
-		Status:    database.StatusOpen,
+		Status:    StatusOpen,
 		Submitted: time.Now(),
-		Comment: database.Comment{
+		Comment: Comment{
 			Timestamp:    time.Now(),
 			Text:         "Testing",
 			TicketNumber: 1,
@@ -72,31 +61,31 @@ func (d mockDB) GetTicketFromDB(number int64) (database.Ticket, error) {
 	}, nil
 }
 
-func (d mockDB) GetNext10TicketsFromDB(offset int64, status database.StatusType) ([]database.Ticket, error) {
-	return []database.Ticket{
-		database.Ticket{
+func (d mockDB) GetNext10TicketsFromDB(offset int64, status StatusType) ([]Ticket, error) {
+	return []Ticket{
+		Ticket{
 			Number:    1,
 			ZDTicket:  1234,
 			UserID:    5678,
-			Issue:     database.Refund,
+			Issue:     Refund,
 			Initials:  "PP",
 			Status:    status,
 			Submitted: time.Now(),
-			Comment: database.Comment{
+			Comment: Comment{
 				Timestamp:    time.Now(),
 				Text:         "Testing",
 				TicketNumber: 1,
 			},
 		},
-		database.Ticket{
+		Ticket{
 			Number:    2,
 			ZDTicket:  5678,
 			UserID:    1234,
-			Issue:     database.Refund,
+			Issue:     Refund,
 			Initials:  "PP",
 			Status:    status,
 			Submitted: time.Now(),
-			Comment: database.Comment{
+			Comment: Comment{
 				Timestamp:    time.Now(),
 				Text:         "Testing Too",
 				TicketNumber: 2,
@@ -105,31 +94,31 @@ func (d mockDB) GetNext10TicketsFromDB(offset int64, status database.StatusType)
 	}, nil
 }
 
-func (d mockDB) GetMCTicketsFromDB(start int64, end int64) ([]database.Ticket, error) {
-	return []database.Ticket{
-		database.Ticket{
+func (d mockDB) GetMCTicketsFromDB(start int64, end int64) ([]Ticket, error) {
+	return []Ticket{
+		Ticket{
 			Number:    1,
 			ZDTicket:  1234,
 			UserID:    5678,
-			Issue:     database.MCContacts,
+			Issue:     MCContacts,
 			Initials:  "PP",
-			Status:    database.StatusOpen,
+			Status:    StatusOpen,
 			Submitted: time.Now(),
-			Comment: database.Comment{
+			Comment: Comment{
 				Timestamp:    time.Now(),
 				Text:         "Testing",
 				TicketNumber: 1,
 			},
 		},
-		database.Ticket{
+		Ticket{
 			Number:    2,
 			ZDTicket:  5678,
 			UserID:    1234,
-			Issue:     database.MCContacts,
+			Issue:     MCContacts,
 			Initials:  "PP",
-			Status:    database.StatusOpen,
+			Status:    StatusOpen,
 			Submitted: time.Now(),
-			Comment: database.Comment{
+			Comment: Comment{
 				Timestamp:    time.Now(),
 				Text:         "Testing Too",
 				TicketNumber: 2,
@@ -146,7 +135,7 @@ func TestNewHandler(t *testing.T) {
 	require.NotNil(t, req)
 	require.NotNil(t, rr)
 
-	http.HandlerFunc(ticket.New).ServeHTTP(rr, req)
+	http.HandlerFunc(routes.New).ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusOK)
 }
@@ -159,7 +148,7 @@ func TestHomeHandler(t *testing.T) {
 	require.NotNil(t, req)
 	require.NotNil(t, rr)
 
-	http.HandlerFunc(ticket.Home).ServeHTTP(rr, req)
+	http.HandlerFunc(routes.Home).ServeHTTP(rr, req)
 
 	assert.Equal(t, rr.Code, http.StatusOK)
 }
@@ -179,7 +168,7 @@ func TestViewTicketHandler(t *testing.T) {
 	db := new(mockDB)
 	r := mux.NewRouter()
 
-	r.HandleFunc("/view/{number}", ticket.Retrieve(db))
+	r.HandleFunc("/view/{number}", routes.Retrieve(db))
 
 	rr := httptest.NewServer(r)
 
@@ -208,8 +197,8 @@ func TestSolveTicketHandler(t *testing.T) {
 	}
 	db := new(mockDB)
 	r := mux.NewRouter()
-	r.HandleFunc("/solve/{number}", ticket.Solve(db))
-	r.HandleFunc("/view/{number}", ticket.Retrieve(db))
+	r.HandleFunc("/solve/{number}", routes.Solve(db))
+	r.HandleFunc("/view/{number}", routes.Retrieve(db))
 
 	rr := httptest.NewServer(r)
 
@@ -241,7 +230,7 @@ func TestViewOpenHandler(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	http.HandlerFunc(ticket.Retrieve10(db, database.StatusOpen)).ServeHTTP(rr, req)
+	http.HandlerFunc(routes.Retrieve10(db, StatusOpen)).ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
@@ -263,7 +252,7 @@ func TestViewSolvedHandler(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	http.HandlerFunc(ticket.Retrieve10(db, database.StatusSolved)).ServeHTTP(rr, req)
+	http.HandlerFunc(routes.Retrieve10(db, StatusSolved)).ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
@@ -285,7 +274,7 @@ func TestAdmin(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	http.HandlerFunc(admin.Admin(db)).ServeHTTP(rr, req)
+	http.HandlerFunc(routes.Admin(db)).ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)

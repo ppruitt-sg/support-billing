@@ -1,4 +1,4 @@
-package ticket
+package routes
 
 import (
 	"database/sql"
@@ -10,22 +10,13 @@ import (
 	"time"
 
 	"../database"
+	. "../structs"
 	"../view"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 )
 
-// Tickets page structure for paginating
-type TicketsPage struct {
-	Tickets    []database.Ticket
-	NextButton bool
-	NextPage   int64
-	PrevPage   int64
-	PrevButton bool
-	Status     database.StatusType
-}
-
-func RetrieveMCTickets(d database.Datastore) ([]database.Ticket, error) {
+func retrieveMCTickets(d database.Datastore) ([]Ticket, error) {
 	currentMonth := time.Now()
 	pacific, err := time.LoadLocation("America/Los_Angeles")
 	startOfCurrentMonth := time.Date(currentMonth.Year(), currentMonth.Month(), 1, 0, 0, 0, 0, pacific)
@@ -45,7 +36,7 @@ func logError(action string, err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
-func parseNewForm(r *http.Request) (t database.Ticket, err error) {
+func parseNewForm(r *http.Request) (t Ticket, err error) {
 	// Parse the new ticket form in /templates/new.gohtml
 	err = r.ParseForm()
 	if err != nil {
@@ -82,7 +73,7 @@ func getOffsetFromPage(page int64) int64 {
 	return page*10 - 10
 }
 
-func Retrieve10(d database.Datastore, status database.StatusType) func(http.ResponseWriter, *http.Request) {
+func Retrieve10(d database.Datastore, status StatusType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var page int64
 		var tp TicketsPage
@@ -209,7 +200,7 @@ func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 		}
 
 		// Solve ticket and update it to the database
-		t.Status = database.StatusSolved
+		t.Status = StatusSolved
 		err = d.UpdateTicketToDB(t)
 		if err != nil {
 			logError(fmt.Sprintf("Updating ticket %d in database", ticketNumber), err, w)
@@ -217,5 +208,16 @@ func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 		}
 		// Redirect back to the ticket view
 		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
+	}
+}
+
+func Admin(d database.Datastore) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ts, err := retrieveMCTickets(d)
+		if err != nil {
+			logError("Error retrieving MC Tickets", err, w)
+		}
+		_ = ts
+		view.Render(w, "admin.gohtml", ts)
 	}
 }

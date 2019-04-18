@@ -1,6 +1,10 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+
+	. "../structs"
+)
 
 type DB struct {
 	*sql.DB

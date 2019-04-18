@@ -1,12 +1,10 @@
 package database
 
-import "time"
+import (
+	"time"
 
-type Comment struct {
-	Timestamp    time.Time
-	Text         string `schema:"text"`
-	TicketNumber int64
-}
+	. "../structs"
+)
 
 func (d *DB) AddCommentToDB(c Comment) (err error) {
 	query := `INSERT INTO comments (timestamp, text, ticket_id)

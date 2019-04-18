@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	"./admin"
 	"./database"
-	"./ticket"
+	"./routes"
+	. "./structs"
 	"./view"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
@@ -27,14 +27,14 @@ func main() {
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 	r.StrictSlash(true)
 
-	r.HandleFunc("/", ticket.Home).Methods("GET")
-	r.HandleFunc("/new/", ticket.New).Methods("GET")
-	r.HandleFunc("/create", ticket.Create(&db)).Methods("POST")
-	r.HandleFunc("/view/open/", ticket.Retrieve10(&db, database.StatusOpen)).Methods("GET")
-	r.HandleFunc("/view/solved/", ticket.Retrieve10(&db, database.StatusSolved)).Methods("GET")
-	r.HandleFunc("/view/{number:[0-9]+}", ticket.Retrieve(&db)).Methods("GET")
-	r.HandleFunc("/solve/{number:[0-9]+}", ticket.Solve(&db)).Methods("POST")
-	r.HandleFunc("/admin", admin.Admin(&db)).Methods("GET")
+	r.HandleFunc("/", routes.Home).Methods("GET")
+	r.HandleFunc("/new/", routes.New).Methods("GET")
+	r.HandleFunc("/create", routes.Create(&db)).Methods("POST")
+	r.HandleFunc("/view/open/", routes.Retrieve10(&db, StatusOpen)).Methods("GET")
+	r.HandleFunc("/view/solved/", routes.Retrieve10(&db, StatusSolved)).Methods("GET")
+	r.HandleFunc("/view/{number:[0-9]+}", routes.Retrieve(&db)).Methods("GET")
+	r.HandleFunc("/solve/{number:[0-9]+}", routes.Solve(&db)).Methods("POST")
+	r.HandleFunc("/admin", routes.Admin(&db)).Methods("GET")
 
 	r.NotFoundHandler = http.HandlerFunc(notFound)
 
