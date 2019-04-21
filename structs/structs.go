@@ -23,11 +23,11 @@ type Ticket struct {
 type IssueType int
 
 const (
-	Refund     IssueType = 0
-	Terminated IssueType = 1
-	DNAFP      IssueType = 2
-	Extension  IssueType = 3
-	MCContacts IssueType = 4
+	Refund = iota
+	Terminated
+	DNAFP
+	Extension
+	MCContacts
 )
 
 func (i IssueType) String() string {
@@ -50,8 +50,8 @@ func (i IssueType) String() string {
 type StatusType int
 
 const (
-	StatusOpen   StatusType = 0
-	StatusSolved StatusType = 1
+	StatusOpen = iota
+	StatusSolved
 )
 
 func (s StatusType) String() string {
