@@ -56,9 +56,9 @@ const (
 
 func (s StatusType) String() string {
 	switch s {
-	case 0:
+	case StatusOpen:
 		return "Open"
-	case 1:
+	case StatusSolved:
 		return "Solved"
 	default:
 		return ""
