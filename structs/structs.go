@@ -30,17 +30,17 @@ const (
 	MCContacts IssueType = 4
 )
 
-func (i IssueType) ToString() string {
+func (i IssueType) String() string {
 	switch i {
-	case 0:
+	case Refund:
 		return "Refund"
-	case 1:
+	case Terminated:
 		return "Billing Terminated"
-	case 2:
-		return "DNA FP"
-	case 3:
+	case DNAFP:
+		return "DNA FP Reactivation"
+	case Extension:
 		return "Extension"
-	case 4:
+	case MCContacts:
 		return "MC Contacts"
 	default:
 		return ""
@@ -54,7 +54,7 @@ const (
 	StatusSolved StatusType = 1
 )
 
-func (s StatusType) ToString() string {
+func (s StatusType) String() string {
 	switch s {
 	case 0:
 		return "Open"

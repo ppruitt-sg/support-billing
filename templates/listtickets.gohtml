@@ -11,7 +11,7 @@
 {{template "header"}}
 <div class="row">
   <div class="col-5 col-start-2">
-      <h1>{{.Status.ToString}} Tickets</h1>
+      <h1>{{.Status.String}} Tickets</h1>
   </div>
 </div>
 <div class="row">
@@ -33,16 +33,16 @@
         <td><a href="/view/{{.Number}}"><strong>{{.Number}}</strong></td>
         <td><a href="https://kasi.sendgrid.com/kasi/users/{{.UserID}}" target="_blank">{{.UserID}}</a></td> 
         <td><a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDTicket}}" target="_blank">{{.ZDTicket}}</a></td>
-        <td>{{.Issue.ToString}}</td>
-        <td>{{.Status.ToString}}</td>
+        <td>{{.Issue.String}}</td>
+        <td>{{.Status.String}}</td>
       </tr>
       {{end}}
     </table>
     {{ if .PrevButton}}
-    <a class="btn btn-small btn-secondary" href="/view/{{.Status.ToString | ToLower}}/?page={{.PrevPage}}">Prev</a>
+    <a class="btn btn-small btn-secondary" href="/view/{{.Status.String | ToLower}}/?page={{.PrevPage}}">Prev</a>
     {{end}}
     {{ if .NextButton}}
-    <a class="btn btn-small btn-secondary" href="/view/{{.Status.ToString | ToLower }}/?page={{.NextPage}}">Next</a>
+    <a class="btn btn-small btn-secondary" href="/view/{{.Status.String | ToLower }}/?page={{.NextPage}}">Next</a>
     {{end}}
   </div>
 </div>
