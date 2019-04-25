@@ -1,10 +1,12 @@
 {{define "header"}}
 <header>
-    <ul class="tab-wrapper zero-border">
-        <li class="tab {{if .}}{{if eq . "New" }}is-active{{end}}{{end}}"><a href="/new/">New Ticket</a></li>
-        <li class="tab {{if .}}{{if eq . "Open" }}is-active{{end}}{{end}}"><a href="/view/open"><b>View Open</b></a></li>
-        <li class="tab {{if .}}{{if eq . "Solved" }}is-active{{end}}{{end}}"><a href="/view/solved"><b>View Solved</b></a></li>
-    </ul>
+    <div class="row">
+        <ul class="tab-wrapper zero-border col-start-2 col-10">
+            <li class="tab {{if .}}{{if eq . "New" }}is-active{{end}}{{end}}"><a href="/new/">New Ticket</a></li>
+            <li class="tab {{if .}}{{if eq . "Open" }}is-active{{end}}{{end}}"><a href="/view/open"><b>View Open</b></a></li>
+            <li class="tab {{if .}}{{if eq . "Solved" }}is-active{{end}}{{end}}"><a href="/view/solved"><b>View Solved</b></a></li>
+        </ul>
+    </div>
 </header>
 <br>
 <br>
