@@ -8,7 +8,7 @@
 <title>View Tickets</title>
 </head>
 <body>
-{{template "header"}}
+{{template "header" .Status.String }}
 <div class="row">
   <div class="col-5 col-start-2">
       <h1>{{.Status}} Tickets</h1>

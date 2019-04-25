@@ -1,17 +1,10 @@
 {{define "header"}}
 <header>
-    <div class="row">
-        <div class="content-block"></div>
-        <div class="col-2 col-start-3">
-            <h2><a href="/new/">New Ticket</a></h2>
-        </div>
-        <div class="col-2 col-start-5">
-            <h2><a href="/view/open/">View Open</a></h2>
-        </div>
-        <div class="col-4">
-            <h2><a href="/view/solved/">View Solved</a></h2>
-        </div>
-    </div>
+    <ul class="tab-wrapper zero-border">
+        <li class="tab {{if .}}{{if eq . "New" }}is-active{{end}}{{end}}"><a href="/new/">New Ticket</a></li>
+        <li class="tab {{if .}}{{if eq . "Open" }}is-active{{end}}{{end}}"><a href="/view/open"><b>View Open</b></a></li>
+        <li class="tab {{if .}}{{if eq . "Solved" }}is-active{{end}}{{end}}"><a href="/view/solved"><b>View Solved</b></a></li>
+    </ul>
 </header>
 <br>
 <br>
