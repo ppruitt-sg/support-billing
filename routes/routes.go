@@ -165,7 +165,7 @@ func Retrieve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 			case sql.ErrNoRows:
 				w.WriteHeader(http.StatusNotFound)
 				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
-
+				return
 			default:
 				logError("Getting ticket from DB", err, w)
 				return
@@ -220,4 +220,9 @@ func Admin(d database.Datastore) func(w http.ResponseWriter, r *http.Request) {
 		_ = ts
 		view.Render(w, "admin.gohtml", ts)
 	}
+}
+
+func NotFound(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	view.Render(w, "404.gohtml", nil)
 }

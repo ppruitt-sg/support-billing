@@ -8,7 +8,6 @@ import (
 	"./database"
 	"./routes"
 	. "./structs"
-	"./view"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -36,13 +35,8 @@ func main() {
 	r.HandleFunc("/solve/{number:[0-9]+}", routes.Solve(&db)).Methods("POST")
 	r.HandleFunc("/admin", routes.Admin(&db)).Methods("GET")
 
-	r.NotFoundHandler = http.HandlerFunc(notFound)
+	r.NotFoundHandler = http.HandlerFunc(routes.NotFound)
 
 	http.ListenAndServe(":8080", handlers.LoggingHandler(os.Stdout, r))
 
-}
-
-func notFound(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	view.Render(w, "404.gohtml", nil)
 }
