@@ -28,6 +28,9 @@ const (
 	DNAFP
 	Extension
 	MCContacts
+	Discount
+	Downgrade
+	UndoDowngrade
 )
 
 func (i IssueType) String() string {
@@ -42,8 +45,14 @@ func (i IssueType) String() string {
 		return "Extension"
 	case MCContacts:
 		return "MC Contacts"
+	case Discount:
+		return "Discount"
+	case Downgrade:
+		return "Force Downgrade"
+	case UndoDowngrade:
+		return "Undo Downgrade"
 	default:
-		return ""
+		return "[undefined]"
 	}
 }
 
@@ -61,7 +70,7 @@ func (s StatusType) String() string {
 	case StatusSolved:
 		return "Solved"
 	default:
-		return ""
+		return "[undefined]"
 	}
 }
 
