@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"time"
 
 	. "../structs"
@@ -131,7 +130,6 @@ func (d *DB) GetMCTicketsFromDB(startTime int64, endTime int64) (ts []Ticket, er
 		// Convert int64 to time.Time
 		t.Submitted = time.Unix(timestamp, 0)
 		ts = append(ts, t)
-		fmt.Println("WORKS")
 	}
 	if r.Err() != nil {
 		return ts, err
