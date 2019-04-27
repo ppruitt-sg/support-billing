@@ -39,10 +39,10 @@
       {{end}}
     </table>
     {{ if .PrevButton}}
-    <a class="btn btn-small btn-secondary" href="/view/{{.Status | ToLower}}/?page={{.PrevPage}}">Prev</a>
+    <a class="btn btn-small btn-secondary" href="/view/{{.Status.String | ToLower}}/?page={{.PrevPage}}">Prev</a>
     {{end}}
     {{ if .NextButton}}
-    <a class="btn btn-small btn-secondary" href="/view/{{.Status | ToLower}}/?page={{.NextPage}}">Next</a>
+    <a class="btn btn-small btn-secondary" href="/view/{{.Status.String | ToLower}}/?page={{.NextPage}}">Next</a>
     {{end}}
   </div>
 </div>
