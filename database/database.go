@@ -18,7 +18,7 @@ type Datastore interface {
 	UpdateTicketToDB(Ticket) error
 	AddTicketToDB(Ticket) (Ticket, error)
 	GetTicketFromDB(int64) (Ticket, error)
-	GetNext10TicketsFromDB(int64, StatusType) ([]Ticket, error)
+	GetNext10TicketsFromDB(int64, StatusType, ...IssueType) ([]Ticket, error)
 	GetMCTicketsFromDB(int64, int64) ([]Ticket, error)
 }
 

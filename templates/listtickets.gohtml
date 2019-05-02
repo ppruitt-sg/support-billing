@@ -8,10 +8,10 @@
 <title>View Tickets</title>
 </head>
 <body>
-{{template "header" .Status.String }}
+{{template "header" .Type }}
 <div class="row">
   <div class="col-5 col-start-2">
-      <h2>{{.Status}} Tickets</h2>
+      <h2>{{.Type}} Tickets</h2>
   </div>
 </div>
 <div class="row">
@@ -39,10 +39,10 @@
       {{end}}
     </table>
     {{ if .PrevButton}}
-    <a class="btn btn-small btn-secondary" href="/view/{{.Status.String | ToLower}}/?page={{.PrevPage}}">Prev</a>
+    <a class="btn btn-small btn-secondary" href="/view/{{.Type | ToLower}}/?page={{.PrevPage}}">Prev</a>
     {{end}}
     {{ if .NextButton}}
-    <a class="btn btn-small btn-secondary" href="/view/{{.Status.String | ToLower}}/?page={{.NextPage}}">Next</a>
+    <a class="btn btn-small btn-secondary" href="/view/{{.Type | ToLower}}/?page={{.NextPage}}">Next</a>
     {{end}}
   </div>
 </div>

@@ -16,6 +16,11 @@ import (
 func main() {
 	var db database.DB
 	var err error
+
+	cxIssues := []IssueType{Refund, Terminated, DNAFP, Extension}
+	leadIssues := []IssueType{Discount, Downgrade, UndoDowngrade}
+	allIssues := []IssueType{Refund, Terminated, DNAFP, Extension, Discount, Downgrade, UndoDowngrade}
+
 	err = db.NewDB(os.Getenv("RDS_USERNAME") + ":" + os.Getenv("RDS_PASSWORD") + "@tcp(" + os.Getenv("RDS_HOSTNAME") + ":" + os.Getenv("RDS_PORT") + ")/" + os.Getenv("RDS_DB_NAME"))
 	if err != nil {
 		log.Fatalln(err)
@@ -29,8 +34,9 @@ func main() {
 	r.HandleFunc("/", routes.Home).Methods("GET")
 	r.HandleFunc("/new/", routes.New).Methods("GET")
 	r.HandleFunc("/create", routes.Create(&db)).Methods("POST")
-	r.HandleFunc("/view/open/", routes.Retrieve10(&db, StatusOpen)).Methods("GET")
-	r.HandleFunc("/view/solved/", routes.Retrieve10(&db, StatusSolved)).Methods("GET")
+	r.HandleFunc("/view/cx/", routes.Retrieve10(&db, StatusOpen, cxIssues...)).Methods("GET")
+	r.HandleFunc("/view/lead/", routes.Retrieve10(&db, StatusOpen, leadIssues...)).Methods("GET")
+	r.HandleFunc("/view/solved/", routes.Retrieve10(&db, StatusSolved, allIssues...)).Methods("GET")
 	r.HandleFunc("/view/{number:[0-9]+}", routes.Retrieve(&db)).Methods("GET")
 	r.HandleFunc("/solve/{number:[0-9]+}", routes.Solve(&db)).Methods("POST")
 	r.HandleFunc("/admin", routes.Admin(&db)).Methods("GET")

@@ -3,8 +3,9 @@
     <div class="row">
         <ul class="tab-wrapper zero-border col-start-2 col-10">
             <li class="tab {{if .}}{{if eq . "New" }}is-active{{end}}{{end}}"><a href="/new/">New Ticket</a></li>
-            <li class="tab {{if .}}{{if eq . "Open" }}is-active{{end}}{{end}}"><a href="/view/open"><b>View Open</b></a></li>
-            <li class="tab {{if .}}{{if eq . "Solved" }}is-active{{end}}{{end}}"><a href="/view/solved"><b>View Solved</b></a></li>
+            <li class="tab {{if .}}{{if eq . "CX" }}is-active{{end}}{{end}}"><a href="/view/cx"><b>CX Tickets</b></a></li>
+            <li class="tab {{if .}}{{if eq . "Lead" }}is-active{{end}}{{end}}"><a href="/view/lead"><b>Lead Tickets</b></a></li>
+            <li class="tab {{if .}}{{if eq . "Solved" }}is-active{{end}}{{end}}"><a href="/view/solved"><b>Solved</b></a></li>
         </ul>
     </div>
 </header>

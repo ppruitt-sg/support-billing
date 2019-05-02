@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -73,13 +74,27 @@ func getOffsetFromPage(page int64) int64 {
 	return page*10 - 10
 }
 
-func Retrieve10(d database.Datastore, status StatusType) func(http.ResponseWriter, *http.Request) {
+func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var page int64
 		var tp TicketsPage
 		var err error
 
-		tp.Status = status
+		// Find type of ticket being viewed
+		re := regexp.MustCompile(`/view/(\w*)`)
+		typeViewed := re.FindStringSubmatch(r.URL.Path)[1]
+
+		// Determine ticket page type by typeViewed
+		switch typeViewed {
+		case "cx":
+			tp.Type = "CX"
+		case "lead":
+			tp.Type = "Lead"
+		case "solved":
+			tp.Type = "Solved"
+		default:
+			tp.Type = "[undefined]"
+		}
 
 		// Checks for page parameter
 		if keys, ok := r.URL.Query()["page"]; ok {
@@ -97,7 +112,7 @@ func Retrieve10(d database.Datastore, status StatusType) func(http.ResponseWrite
 		offset := getOffsetFromPage(page)
 
 		// Get 10 tickets from page based off offset and status
-		tp.Tickets, err = d.GetNext10TicketsFromDB(offset, status)
+		tp.Tickets, err = d.GetNext10TicketsFromDB(offset, status, issues...)
 		if err != nil {
 			logError(fmt.Sprintf("Getting 10 tickets for page %d", page), err, w)
 			return

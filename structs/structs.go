@@ -76,6 +76,7 @@ func (s StatusType) String() string {
 
 // Tickets page structure for paginating
 type TicketsPage struct {
+	Type       string
 	Tickets    []Ticket
 	NextButton bool
 	NextPage   int64

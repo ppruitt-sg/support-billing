@@ -1,6 +1,7 @@
 package database
 
 import (
+	"strings"
 	"time"
 
 	. "../structs"
@@ -65,23 +66,31 @@ func (d *DB) GetTicketFromDB(num int64) (Ticket, error) {
 	return t, nil
 }
 
-func (d *DB) GetNext10TicketsFromDB(offset int64, status StatusType) (ts []Ticket, err error) {
+func (d *DB) GetNext10TicketsFromDB(offset int64, status StatusType, issues ...IssueType) (ts []Ticket, err error) {
 	// Select rows with limit
 	var query string
 	switch status {
 	case StatusOpen:
+		// If status is open list in ascending order
 		query = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
 		FROM tickets 
-		WHERE status=? AND issue<>4
+		WHERE status=? AND issue IN (?` + strings.Repeat(`,?`, len(issues)-1) + `)
 		LIMIT ?, 10`
 	case StatusSolved:
+		// If status is solved list in descending order
 		query = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
 		FROM tickets 
-		WHERE status=? AND issue<>4
+		WHERE status=? AND issue IN (?` + strings.Repeat(`,?`, len(issues)-1) + `)
 		ORDER BY ticket_id DESC
 		LIMIT ?, 10`
 	}
-	r, err := d.Query(query, status, offset)
+	args := []interface{}{status}
+	for _, issue := range issues {
+		args = append(args, issue)
+	}
+	args = append(args, offset)
+
+	r, err := d.Query(query, args...)
 	if err != nil {
 		return ts, err
 	}

@@ -61,7 +61,7 @@ func (d mockDB) GetTicketFromDB(number int64) (Ticket, error) {
 	}, nil
 }
 
-func (d mockDB) GetNext10TicketsFromDB(offset int64, status StatusType) ([]Ticket, error) {
+func (d mockDB) GetNext10TicketsFromDB(offset int64, status StatusType, issues ...IssueType) ([]Ticket, error) {
 	return []Ticket{
 		Ticket{
 			Number:    1,
@@ -215,14 +215,14 @@ func TestSolveTicketHandler(t *testing.T) {
 	}
 }
 
-func TestViewOpenHandler(t *testing.T) {
+func TestViewCXHandler(t *testing.T) {
 	var err error
 	db := new(mockDB)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest("GET", "/view/open", nil)
+	req, err := http.NewRequest("GET", "/view/cx", nil)
 
 	if err != nil {
 		t.Errorf("An error occurred. %v", err)
@@ -252,7 +252,7 @@ func TestViewSolvedHandler(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	http.HandlerFunc(routes.Retrieve10(db, StatusSolved)).ServeHTTP(rr, req)
+	http.HandlerFunc(routes.Retrieve10(db, StatusSolved, []IssueType{Refund}...)).ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
