@@ -84,6 +84,7 @@ func (d *DB) GetNext10TicketsFromDB(offset int64, status StatusType, issues ...I
 		ORDER BY ticket_id DESC
 		LIMIT ?, 10`
 	}
+	// Create and append args for DB query
 	args := []interface{}{status}
 	for _, issue := range issues {
 		args = append(args, issue)

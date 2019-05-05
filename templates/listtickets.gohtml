@@ -38,10 +38,10 @@
       </tr>
       {{end}}
     </table>
-    {{ if .PrevButton}}
+    {{ if ( ge .PrevPage 1) }}
     <a class="btn btn-small btn-secondary" href="/view/{{.Type | ToLower}}/?page={{.PrevPage}}">Prev</a>
     {{end}}
-    {{ if .NextButton}}
+    {{ if ( ge .NextPage 2) }}
     <a class="btn btn-small btn-secondary" href="/view/{{.Type | ToLower}}/?page={{.NextPage}}">Next</a>
     {{end}}
   </div>

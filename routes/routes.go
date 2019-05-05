@@ -67,13 +67,6 @@ func New(w http.ResponseWriter, r *http.Request) {
 	view.Render(w, "new.gohtml", nil)
 }
 
-func getOffsetFromPage(page int64) int64 {
-	if page == 1 {
-		return 0
-	}
-	return page*10 - 10
-}
-
 func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var page int64
@@ -109,7 +102,7 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 		}
 
 		// Get offset value based off page number
-		offset := getOffsetFromPage(page)
+		offset := page*10 - 10
 
 		// Get 10 tickets from page based off offset and status
 		tp.Tickets, err = d.GetNext10TicketsFromDB(offset, status, issues...)
@@ -118,17 +111,14 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 			return
 		}
 
-		// Include Next Button if there are 10 tickets
-		tp.NextPage = page + 1
+		// Set next page if there are more than 10 tickets, NextPage remains 0 if not
 		if len(tp.Tickets) == 10 {
-			tp.NextButton = true
+			tp.NextPage = page + 1
 		}
 
-		// Included Previous Button if this isn't page 1
+		// Set previous page
 		tp.PrevPage = page - 1
-		if page > 1 {
-			tp.PrevButton = true
-		}
+
 		view.Render(w, "listtickets.gohtml", tp)
 	}
 }

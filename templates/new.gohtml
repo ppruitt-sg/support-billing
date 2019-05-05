@@ -5,7 +5,22 @@
 <link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide.css" rel="stylesheet">
 <link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide-grid.css" rel="stylesheet">
 <link href="/assets/css/style.css" rel="stylesheet">
+
 <script src="/assets/js/AutoExpand.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+<script>
+$(document).on('change','#issue-input',function(){
+    var selection = $(this).val();
+    switch(selection){
+    case "1":
+        $("#IIA").show()
+        break;
+    default:
+        $("#IIA").hide()
+        break;
+    }
+});
+</script>
 
 <title>New Ticket</title>
 </head>
@@ -52,6 +67,12 @@
         <div class="input-text-wrap is-required is-focused col-2 col-start-2">
             <label class="input-text-label">Initials</label>
             <input type="text" name="initials" maxlength="8" required>
+        </div>
+    </div>
+     <div class="row" id="IIA" style="display:none">
+        <div class="input-checkbox-wrap col-3 col-start-2">
+            <input type="checkbox" id="checkbox-iia" required>
+            <label class="input-checkbox-label" for="checkbox-iia">IIA is less than $100</label>
         </div>
     </div>
     <div class="row">
