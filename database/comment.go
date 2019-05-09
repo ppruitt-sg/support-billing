@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	. "../structs"
+	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
 func (d *DB) AddCommentToDB(c Comment) (err error) {

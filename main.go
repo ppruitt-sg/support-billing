@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"os"
 
-	"./database"
-	"./routes"
-	. "./structs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/ppruitt-sg/support-billing/database"
+	"github.com/ppruitt-sg/support-billing/routes"
+	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 
-	. "../structs"
+	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
 type DB struct {
