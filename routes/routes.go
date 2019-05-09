@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"time"
 
-	"../database"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
+	"github.com/ppruitt-sg/support-billing/database"
 	. "github.com/ppruitt-sg/support-billing/structs"
 	"github.com/ppruitt-sg/support-billing/view"
 )
