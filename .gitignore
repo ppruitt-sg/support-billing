@@ -1,5 +1,6 @@
 app-env
 createdb.sql
+vendor/
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
