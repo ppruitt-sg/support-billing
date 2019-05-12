@@ -16,11 +16,11 @@ import (
 )
 
 type Specification struct {
-	Username string `default:"ppruitt"`
-	Password string `default:"password"`
-	Hostname string `default:"localhost"`
-	Port     string `default:"3306"`
-	DBName   string `default:"supportbilling"`
+	Username string `default:"ppruitt" envconfig:"RDS_USERNAME"`
+	Password string `default:"password" envconfig:"RDS_PASSWORD"`
+	Hostname string `default:"localhost" envconfig:"RDS_HOSTNAME"`
+	Port     string `default:"3306" envconfig:"RDS_PORT"`
+	DBName   string `default:"supportbilling" envconfig:"RDS_DB_NAME"`
 }
 
 func main() {
