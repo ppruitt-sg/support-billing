@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -32,7 +31,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Println(s.Username)
 
 	cxIssues := []IssueType{Refund, Terminated, DNAFP, Extension}
 	leadIssues := []IssueType{Discount, Downgrade, UndoDowngrade}
