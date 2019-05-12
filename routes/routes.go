@@ -2,12 +2,12 @@ package routes
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -51,12 +51,24 @@ func parseNewForm(r *http.Request) (t Ticket, err error) {
 		return t, err
 	}
 
-	// Check max length of comment
-	if len(t.Comment.Text) > 255 {
-		return t, errors.New("Comment exceeds max width (255 characters)")
+	return t, nil
+}
+
+func validateInput(t Ticket) (err error) {
+	maxIntSize := 2147483647
+	if t.UserID > maxIntSize {
+		return fmt.Errorf("UserID is greater than %d", maxIntSize)
 	}
 
-	return t, nil
+	if t.ZDTicket > maxIntSize {
+		return fmt.Errorf("ZDTicket is greater than %d", maxIntSize)
+	}
+
+	comment := strings.ReplaceAll(t.Comment.Text, "\n", `\n`)
+	if len(comment) > 255 {
+		return fmt.Errorf("Comment exceeds 255 characters, was %d characters", len(comment))
+	}
+	return nil
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
@@ -129,6 +141,12 @@ func Create(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 		t, err := parseNewForm(r)
 		if err != nil {
 			logError("Parsing new ticket form", err, w)
+			return
+		}
+
+		err = validateInput(t)
+		if err != nil {
+			logError("Validating input", err, w)
 			return
 		}
 
