@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -8,20 +9,36 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/ppruitt-sg/support-billing/database"
 	"github.com/ppruitt-sg/support-billing/routes"
 	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
+type Specification struct {
+	Username string `default:"ppruitt"`
+	Password string `default:"password"`
+	Hostname string `default:"localhost"`
+	Port     string `default:"3306"`
+	DBName   string `default:"supportbilling"`
+}
+
 func main() {
 	var db database.DB
 	var err error
+	var s Specification
+
+	err = envconfig.Process("RDS", &s)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	fmt.Println(s.Username)
 
 	cxIssues := []IssueType{Refund, Terminated, DNAFP, Extension}
 	leadIssues := []IssueType{Discount, Downgrade, UndoDowngrade}
 	allIssues := []IssueType{Refund, Terminated, DNAFP, Extension, Discount, Downgrade, UndoDowngrade}
 
-	err = db.NewDB(os.Getenv("RDS_USERNAME") + ":" + os.Getenv("RDS_PASSWORD") + "@tcp(" + os.Getenv("RDS_HOSTNAME") + ":" + os.Getenv("RDS_PORT") + ")/" + os.Getenv("RDS_DB_NAME"))
+	err = db.NewDB(s.Username + ":" + s.Password + "@tcp(" + s.Hostname + ":" + s.Port + ")/" + s.DBName)
 	if err != nil {
 		log.Fatalln(err)
 	}

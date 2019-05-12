@@ -10,6 +10,7 @@ RUN go get github.com/gorilla/handlers
 RUN go get github.com/stretchr/testify/assert
 RUN go get github.com/stretchr/testify/require
 RUN go get github.com/ppruitt-sg/support-billing
+RUN go get github.com/kelseyhightower/envconfig
 RUN go build -o eb-go-app
 
 EXPOSE 8080
