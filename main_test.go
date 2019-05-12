@@ -12,9 +12,9 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	. "./structs"
+	. "github.com/ppruitt-sg/support-billing/structs"
 
-	"./routes"
+	"github.com/ppruitt-sg/support-billing/routes"
 )
 
 ////////////////////////////////
