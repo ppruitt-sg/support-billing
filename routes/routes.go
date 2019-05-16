@@ -23,7 +23,7 @@ func retrieveMCTickets(d database.Datastore) ([]Ticket, error) {
 	startOfCurrentMonth := time.Date(currentMonth.Year(), currentMonth.Month(), 1, 0, 0, 0, 0, pacific)
 	startOfNextMonth := startOfCurrentMonth.AddDate(0, 1, 0)
 
-	ts, err := d.GetMCTicketsFromDB(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
+	ts, err := d.GetMCTickets(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
 	if err != nil {
 		return ts, err
 	}
@@ -117,7 +117,7 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 		offset := page*10 - 10
 
 		// Get 10 tickets from page based off offset and status
-		tp.Tickets, err = d.GetNext10TicketsFromDB(offset, status, issues...)
+		tp.Tickets, err = d.GetNext10Tickets(offset, status, issues...)
 		if err != nil {
 			logError(fmt.Sprintf("Getting 10 tickets for page %d", page), err, w)
 			return
@@ -155,7 +155,7 @@ func Create(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 		t.Comment.Timestamp = time.Now()
 
 		// Add to database
-		t, err = d.AddTicketToDB(t)
+		t, err = d.AddTicket(t)
 		if err != nil {
 			logError("Adding ticket to database", err, w)
 			return
@@ -181,7 +181,7 @@ func Retrieve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 		}
 
 		// Get specific ticket number
-		t, err := d.GetTicketFromDB(ticketNumber)
+		t, err := d.GetTicket(ticketNumber)
 		if err != nil {
 			switch err {
 			// If the ticket doesn't exist, return 404 and display ticketnotfound.gohtml
@@ -216,7 +216,7 @@ func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 		}
 
 		// Get specific ticket number
-		t, err := d.GetTicketFromDB(ticketNumber)
+		t, err := d.GetTicket(ticketNumber)
 		if err != nil {
 			logError(fmt.Sprintf("Getting ticket %d from database", ticketNumber), err, w)
 			return
@@ -224,7 +224,7 @@ func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 
 		// Solve ticket and update it to the database
 		t.Status = StatusSolved
-		err = d.UpdateTicketToDB(t)
+		err = d.UpdateTicket(t)
 		if err != nil {
 			logError(fmt.Sprintf("Updating ticket %d in database", ticketNumber), err, w)
 			return

@@ -12,14 +12,14 @@ type DB struct {
 
 type Datastore interface {
 	// Comment
-	AddCommentToDB(Comment) error
-	GetCommentFromDB(int64) (Comment, error)
+	AddComment(Comment) error
+	GetComment(int64) (Comment, error)
 	// Ticket
-	UpdateTicketToDB(Ticket) error
-	AddTicketToDB(Ticket) (Ticket, error)
-	GetTicketFromDB(int64) (Ticket, error)
-	GetNext10TicketsFromDB(int64, StatusType, ...IssueType) ([]Ticket, error)
-	GetMCTicketsFromDB(int64, int64) ([]Ticket, error)
+	UpdateTicket(Ticket) error
+	AddTicket(Ticket) (Ticket, error)
+	GetTicket(int64) (Ticket, error)
+	GetNext10Tickets(int64, StatusType, ...IssueType) ([]Ticket, error)
+	GetMCTickets(int64, int64) ([]Ticket, error)
 }
 
 func (d *DB) NewDB(dataSourceName string) (err error) {

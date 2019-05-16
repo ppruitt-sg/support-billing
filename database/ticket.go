@@ -7,7 +7,7 @@ import (
 	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
-func (d *DB) UpdateTicketToDB(t Ticket) error {
+func (d *DB) UpdateTicket(t Ticket) error {
 	query := `UPDATE tickets
 		SET zdticket=?,
 		userid=?,
@@ -25,7 +25,7 @@ func (d *DB) UpdateTicketToDB(t Ticket) error {
 
 }
 
-func (d *DB) AddTicketToDB(t Ticket) (Ticket, error) {
+func (d *DB) AddTicket(t Ticket) (Ticket, error) {
 	query := `INSERT INTO tickets (zdticket, userid, issue, initials, status, submitted)
 		VALUES (?, ?, ?, ?, ?, ?);`
 	result, err := d.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Submitted.Unix())
@@ -38,7 +38,7 @@ func (d *DB) AddTicketToDB(t Ticket) (Ticket, error) {
 	}
 	t.Comment.TicketNumber = t.Number
 
-	err = d.AddCommentToDB(t.Comment)
+	err = d.AddComment(t.Comment)
 	if err != nil {
 		return t, err
 	}
@@ -46,7 +46,7 @@ func (d *DB) AddTicketToDB(t Ticket) (Ticket, error) {
 	return t, nil
 }
 
-func (d *DB) GetTicketFromDB(num int64) (Ticket, error) {
+func (d *DB) GetTicket(num int64) (Ticket, error) {
 	query := `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted FROM tickets
 		WHERE ticket_id=?`
 	r := d.QueryRow(query, num)
@@ -58,7 +58,7 @@ func (d *DB) GetTicketFromDB(num int64) (Ticket, error) {
 	}
 	t.Submitted = time.Unix(timestamp, 0)
 
-	t.Comment, err = d.GetCommentFromDB(num)
+	t.Comment, err = d.GetComment(num)
 	if err != nil {
 		return Ticket{}, err
 	}
@@ -66,7 +66,7 @@ func (d *DB) GetTicketFromDB(num int64) (Ticket, error) {
 	return t, nil
 }
 
-func (d *DB) GetNext10TicketsFromDB(offset int64, status StatusType, issues ...IssueType) (ts []Ticket, err error) {
+func (d *DB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueType) (ts []Ticket, err error) {
 	// Select rows with limit
 	var query string
 	switch status {
@@ -114,7 +114,7 @@ func (d *DB) GetNext10TicketsFromDB(offset int64, status StatusType, issues ...I
 	return ts, nil
 }
 
-func (d *DB) GetMCTicketsFromDB(startTime int64, endTime int64) (ts []Ticket, err error) {
+func (d *DB) GetMCTickets(startTime int64, endTime int64) (ts []Ticket, err error) {
 	query := `SELECT t.ticket_id, t.zdticket, t.userid, t.issue, t.initials, t.status, t.submitted, c.text 
 		FROM tickets t
 		INNER JOIN

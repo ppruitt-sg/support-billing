@@ -23,11 +23,11 @@ import (
 type mockDB struct {
 }
 
-func (d mockDB) AddCommentToDB(c Comment) error {
+func (d mockDB) AddComment(c Comment) error {
 	return nil
 }
 
-func (d mockDB) GetCommentFromDB(stamp int64) (Comment, error) {
+func (d mockDB) GetComment(stamp int64) (Comment, error) {
 	return Comment{
 		Timestamp:    time.Unix(stamp, 0),
 		Text:         "Hello",
@@ -35,16 +35,16 @@ func (d mockDB) GetCommentFromDB(stamp int64) (Comment, error) {
 	}, nil
 }
 
-func (d mockDB) UpdateTicketToDB(t Ticket) error {
+func (d mockDB) UpdateTicket(t Ticket) error {
 	return nil
 }
 
-func (d mockDB) AddTicketToDB(t Ticket) (Ticket, error) {
+func (d mockDB) AddTicket(t Ticket) (Ticket, error) {
 	t.Number = 1
 	return t, nil
 }
 
-func (d mockDB) GetTicketFromDB(number int64) (Ticket, error) {
+func (d mockDB) GetTicket(number int64) (Ticket, error) {
 	return Ticket{
 		Number:    1,
 		ZDTicket:  1234,
@@ -61,7 +61,7 @@ func (d mockDB) GetTicketFromDB(number int64) (Ticket, error) {
 	}, nil
 }
 
-func (d mockDB) GetNext10TicketsFromDB(offset int64, status StatusType, issues ...IssueType) ([]Ticket, error) {
+func (d mockDB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueType) ([]Ticket, error) {
 	return []Ticket{
 		Ticket{
 			Number:    1,
@@ -94,7 +94,7 @@ func (d mockDB) GetNext10TicketsFromDB(offset int64, status StatusType, issues .
 	}, nil
 }
 
-func (d mockDB) GetMCTicketsFromDB(start int64, end int64) ([]Ticket, error) {
+func (d mockDB) GetMCTickets(start int64, end int64) ([]Ticket, error) {
 	return []Ticket{
 		Ticket{
 			Number:    1,

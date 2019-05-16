@@ -6,7 +6,7 @@ import (
 	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
-func (d *DB) AddCommentToDB(c Comment) (err error) {
+func (d *DB) AddComment(c Comment) (err error) {
 	query := `INSERT INTO comments (timestamp, text, ticket_id)
 		VALUES (?, ?, ?)`
 	_, err = d.Exec(query, c.Timestamp.Unix(), c.Text, c.TicketNumber)
@@ -16,7 +16,7 @@ func (d *DB) AddCommentToDB(c Comment) (err error) {
 	return nil
 }
 
-func (d *DB) GetCommentFromDB(num int64) (c Comment, err error) {
+func (d *DB) GetComment(num int64) (c Comment, err error) {
 	query := `SELECT timestamp, text, ticket_id FROM comments
 		WHERE ticket_id=?`
 
