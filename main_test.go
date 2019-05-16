@@ -1,16 +1,15 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	_ "github.com/go-sql-driver/mysql"
 
 	. "github.com/ppruitt-sg/support-billing/structs"
 
@@ -21,110 +20,59 @@ import (
 // Mock DB
 ////////////////////////////////
 type mockDB struct {
+	FakeTicket      Ticket
+	FakeTicketSlice []Ticket
+	FakeComment     Comment
+	FakeError       error
 }
 
 func (d mockDB) AddComment(c Comment) error {
-	return nil
+	return d.FakeError
 }
 
 func (d mockDB) GetComment(stamp int64) (Comment, error) {
-	return Comment{
-		Timestamp:    time.Unix(stamp, 0),
-		Text:         "Hello",
-		TicketNumber: 1,
-	}, nil
+	return d.FakeComment, d.FakeError
 }
 
 func (d mockDB) UpdateTicket(t Ticket) error {
-	return nil
+	return d.FakeError
 }
 
 func (d mockDB) AddTicket(t Ticket) (Ticket, error) {
-	t.Number = 1
-	return t, nil
+	return d.FakeTicket, d.FakeError
 }
 
 func (d mockDB) GetTicket(number int64) (Ticket, error) {
-	return Ticket{
-		Number:    1,
-		ZDTicket:  1234,
-		UserID:    5678,
-		Issue:     Refund,
-		Initials:  "PP",
-		Status:    StatusOpen,
-		Submitted: time.Now(),
-		Comment: Comment{
-			Timestamp:    time.Now(),
-			Text:         "Testing",
-			TicketNumber: 1,
-		},
-	}, nil
+	return d.FakeTicket, d.FakeError
 }
 
 func (d mockDB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueType) ([]Ticket, error) {
-	return []Ticket{
-		Ticket{
-			Number:    1,
-			ZDTicket:  1234,
-			UserID:    5678,
-			Issue:     Refund,
-			Initials:  "PP",
-			Status:    status,
-			Submitted: time.Now(),
-			Comment: Comment{
-				Timestamp:    time.Now(),
-				Text:         "Testing",
-				TicketNumber: 1,
-			},
-		},
-		Ticket{
-			Number:    2,
-			ZDTicket:  5678,
-			UserID:    1234,
-			Issue:     Refund,
-			Initials:  "PP",
-			Status:    status,
-			Submitted: time.Now(),
-			Comment: Comment{
-				Timestamp:    time.Now(),
-				Text:         "Testing Too",
-				TicketNumber: 2,
-			},
-		},
-	}, nil
+	return d.FakeTicketSlice, d.FakeError
 }
 
 func (d mockDB) GetMCTickets(start int64, end int64) ([]Ticket, error) {
-	return []Ticket{
-		Ticket{
-			Number:    1,
-			ZDTicket:  1234,
-			UserID:    5678,
-			Issue:     MCContacts,
-			Initials:  "PP",
-			Status:    StatusOpen,
-			Submitted: time.Now(),
-			Comment: Comment{
-				Timestamp:    time.Now(),
-				Text:         "Testing",
-				TicketNumber: 1,
-			},
-		},
-		Ticket{
-			Number:    2,
-			ZDTicket:  5678,
-			UserID:    1234,
-			Issue:     MCContacts,
-			Initials:  "PP",
-			Status:    StatusOpen,
-			Submitted: time.Now(),
-			Comment: Comment{
-				Timestamp:    time.Now(),
-				Text:         "Testing Too",
-				TicketNumber: 2,
-			},
-		},
-	}, nil
+	return d.FakeTicketSlice, d.FakeError
+}
+
+var expectedDB = mockDB{
+	Ticket{},
+	[]Ticket{},
+	Comment{},
+	nil,
+}
+
+var errorDB = mockDB{
+	Ticket{},
+	[]Ticket{},
+	Comment{},
+	errors.New("Generic error"),
+}
+
+var rowNotFoundDB = mockDB{
+	Ticket{},
+	[]Ticket{},
+	Comment{},
+	sql.ErrNoRows,
 }
 
 func TestNewHandler(t *testing.T) {
@@ -154,30 +102,29 @@ func TestHomeHandler(t *testing.T) {
 }
 
 func TestViewTicketHandler(t *testing.T) {
-	var err error
+	var rr *httptest.Server
+	var r *mux.Router
 	var tests = []struct {
 		n        string // ticket number
 		expected int
+		db       mockDB
 	}{
-		{"1", 200},                       // Existing ticket
-		{"", 404},                        // Blank ticket
-		{"25325235235235235235253", 500}, // Ticket too long
+		{"1", 200, expectedDB},
+		{"2", 404, rowNotFoundDB},
+		{"", 404, expectedDB},
+		{"1", 500, errorDB},
+		{"25325235235235235235253", 500, expectedDB},
 	}
 
-	//database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
-	db := new(mockDB)
-	r := mux.NewRouter()
-
-	r.HandleFunc("/view/{number}", routes.Retrieve(db))
-
-	rr := httptest.NewServer(r)
-
-	require.Nil(t, err)
-	require.NotNil(t, db)
-	require.NotNil(t, r)
-	require.NotNil(t, rr)
-
 	for _, test := range tests {
+		r = mux.NewRouter()
+		r.HandleFunc("/view/{number}", routes.Retrieve(test.db))
+
+		rr = httptest.NewServer(r)
+
+		require.NotNil(t, r)
+		require.NotNil(t, rr)
+
 		url := rr.URL + "/view/" + test.n
 		resp, err := http.Get(url)
 		require.Nil(t, err)
@@ -187,26 +134,29 @@ func TestViewTicketHandler(t *testing.T) {
 }
 
 func TestSolveTicketHandler(t *testing.T) {
+	var rr *httptest.Server
+	var r *mux.Router
 	var tests = []struct {
 		n        string // ticket number
 		expected int
+		db       mockDB
 	}{
-		{"1", 200},                       // Existing ticket
-		{"", 404},                        // Blank ticket
-		{"25325235235235235235253", 500}, // Ticket too long
+		{"1", 200, expectedDB},
+		{"2", 404, rowNotFoundDB},
+		{"", 404, expectedDB},
+		{"1", 500, errorDB},
+		{"25325235235235235235253", 500, expectedDB},
 	}
-	db := new(mockDB)
-	r := mux.NewRouter()
-	r.HandleFunc("/solve/{number}", routes.Solve(db))
-	r.HandleFunc("/view/{number}", routes.Retrieve(db))
-
-	rr := httptest.NewServer(r)
-
-	require.NotNil(t, db)
-	require.NotNil(t, r)
-	require.NotNil(t, rr)
 
 	for _, test := range tests {
+		r = mux.NewRouter()
+		r.HandleFunc("/solve/{number}", routes.Solve(test.db))
+		r.HandleFunc("/view/{number}", routes.Retrieve(test.db))
+
+		rr = httptest.NewServer(r)
+
+		require.NotNil(t, r)
+		require.NotNil(t, rr)
 		url := rr.URL + "/view/" + test.n
 		resp, err := http.Post(url, "", nil)
 		require.Nil(t, err)
@@ -216,72 +166,74 @@ func TestSolveTicketHandler(t *testing.T) {
 }
 
 func TestViewCXHandler(t *testing.T) {
-	var err error
-	db := new(mockDB)
-	if err != nil {
-		t.Fatal(err)
+	var rr *httptest.ResponseRecorder
+	var tests = []struct {
+		expected int
+		db       mockDB
+	}{
+		{200, expectedDB},
+		{500, errorDB},
 	}
 
 	req, err := http.NewRequest("GET", "/view/cx", nil)
-
 	if err != nil {
 		t.Errorf("An error occurred. %v", err)
 	}
 
-	rr := httptest.NewRecorder()
+	for _, test := range tests {
+		rr = httptest.NewRecorder()
 
-	http.HandlerFunc(routes.Retrieve10(db, StatusOpen)).ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
+		http.HandlerFunc(routes.Retrieve10(test.db, StatusOpen)).ServeHTTP(rr, req)
+		assert.Equal(t, rr.Code, test.expected)
 	}
 }
 
 func TestViewSolvedHandler(t *testing.T) {
-	var err error
-	db := new(mockDB)
-	if err != nil {
-		t.Fatal(err)
+	var rr *httptest.ResponseRecorder
+	var tests = []struct {
+		expected int
+		db       mockDB
+	}{
+		{200, expectedDB},
+		{500, errorDB},
 	}
 
 	req, err := http.NewRequest("GET", "/view/solved", nil)
-
 	if err != nil {
 		t.Errorf("An error occurred. %v", err)
 	}
 
-	rr := httptest.NewRecorder()
+	for _, test := range tests {
+		rr = httptest.NewRecorder()
 
-	http.HandlerFunc(routes.Retrieve10(db, StatusSolved, []IssueType{Refund}...)).ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
+		http.HandlerFunc(routes.Retrieve10(test.db, StatusSolved)).ServeHTTP(rr, req)
+		assert.Equal(t, rr.Code, test.expected)
 	}
 }
 
 func TestAdmin(t *testing.T) {
-	var err error
-	db := new(mockDB)
-	if err != nil {
-		t.Fatal(err)
+	var rr *httptest.ResponseRecorder
+	var tests = []struct {
+		expected int
+		db       mockDB
+	}{
+		{200, expectedDB},
+		{500, errorDB},
 	}
 
 	req, err := http.NewRequest("GET", "/admin", nil)
-
 	if err != nil {
 		t.Errorf("An error occurred. %v", err)
 	}
 
-	rr := httptest.NewRecorder()
+	for _, test := range tests {
+		rr = httptest.NewRecorder()
 
-	http.HandlerFunc(routes.Admin(db)).ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Status code differs. Expected %d .\n Got %d instead", http.StatusOK, status)
+		http.HandlerFunc(routes.Admin(test.db)).ServeHTTP(rr, req)
+		assert.Equal(t, rr.Code, test.expected)
 	}
 }
 
-/*
 //////////////////////////////////////////////////////////////
 // Benchmarks
 //////////////////////////////////////////////////////////////
@@ -294,7 +246,7 @@ func BenchmarkNewHandler(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		rr := httptest.NewRecorder()
-		http.HandlerFunc(ticket.New).ServeHTTP(rr, req)
+		http.HandlerFunc(routes.New).ServeHTTP(rr, req)
 	}
 }
 
@@ -307,39 +259,27 @@ func BenchmarkHomeHandler(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		rr := httptest.NewRecorder()
-		http.HandlerFunc(ticket.New).ServeHTTP(rr, req)
+		http.HandlerFunc(routes.New).ServeHTTP(rr, req)
 	}
 }
 
 func BenchmarkViewTicketHandler(b *testing.B) {
-	var err error
-	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
-	if err != nil {
-		b.Fatal(err)
-	}
-
 	r := mux.NewRouter()
-	r.HandleFunc("/solve/{number}", ticket.Retrieve())
+	r.HandleFunc("/view/{number}", routes.Retrieve(expectedDB))
 
 	rr := httptest.NewServer(r)
 	defer rr.Close()
 	for i := 0; i < b.N; i++ {
-		resp, _ := http.Post(rr.URL+"/solve/1", "", nil)
+		resp, _ := http.Post(rr.URL+"/view/1", "", nil)
 		resp.Body.Close()
 	}
 
 }
 
 func BenchmarkSolveTicketHandler(b *testing.B) {
-	var err error
-	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
-	if err != nil {
-		b.Fatal(err)
-	}
-
 	r := mux.NewRouter()
-	r.HandleFunc("/view/{number}", func(http.ResponseWriter, *http.Request) {})
-	r.HandleFunc("/solve/{number}", ticket.Solve)
+	r.HandleFunc("/view/{number}", routes.Retrieve(expectedDB))
+	r.HandleFunc("/solve/{number}", routes.Solve(expectedDB))
 
 	rr := httptest.NewServer(r)
 	defer rr.Close()
@@ -350,42 +290,27 @@ func BenchmarkSolveTicketHandler(b *testing.B) {
 
 }
 
-func BenchmarkViewOpenHandler(b *testing.B) {
-	var err error
-	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
-	if err != nil {
-		b.Fatal(err)
-	}
-
-	req, err := http.NewRequest("GET", "/view/open", nil)
-
+func BenchmarkViewCXHandler(b *testing.B) {
+	req, err := http.NewRequest("GET", "/view/cx", nil)
 	if err != nil {
 		b.Errorf("An error occurred. %v", err)
 	}
+
 	rr := httptest.NewRecorder()
 	for i := 0; i < b.N; i++ {
-		http.HandlerFunc(ticket.Retrieve10(ticket.StatusOpen)).ServeHTTP(rr, req)
+		http.HandlerFunc(routes.Retrieve10(expectedDB, StatusOpen)).ServeHTTP(rr, req)
 	}
 
 }
 
 func BenchmarkViewSolvedHandler(b *testing.B) {
-	var err error
-	database.DBCon, err = sql.Open("mysql", os.Getenv("RDS_USERNAME")+":"+os.Getenv("RDS_PASSWORD")+"@tcp("+os.Getenv("RDS_HOSTNAME")+":"+os.Getenv("RDS_PORT")+")/"+os.Getenv("RDS_DB_NAME"))
-	if err != nil {
-		b.Fatal(err)
-	}
-
 	req, err := http.NewRequest("GET", "/view/solved", nil)
-
 	if err != nil {
 		b.Errorf("An error occurred. %v", err)
 	}
 
 	rr := httptest.NewRecorder()
 	for i := 0; i < b.N; i++ {
-		http.HandlerFunc(ticket.Retrieve10(ticket.StatusSolved)).ServeHTTP(rr, req)
+		http.HandlerFunc(routes.Retrieve10(expectedDB, StatusSolved)).ServeHTTP(rr, req)
 	}
-
 }
-*/
