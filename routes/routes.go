@@ -188,20 +188,13 @@ func Retrieve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 			case sql.ErrNoRows:
 				w.WriteHeader(http.StatusNotFound)
 				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
-				return
 			default:
 				logError("Getting ticket from DB", err, w)
-				return
 			}
-		}
-
-		// Render viewticket.gohtml
-		tpl := "viewticket.gohtml"
-		err = view.Render(w, tpl, t)
-		if err != nil {
-			logError(fmt.Sprintf("Rendering %s template", tpl), err, w)
 			return
 		}
+
+		view.Render(w, "viewticket.gohtml", t)
 	}
 }
 
