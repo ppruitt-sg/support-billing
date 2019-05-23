@@ -11,10 +11,10 @@ type Comment struct {
 // Ticket structure
 type Ticket struct {
 	Number    int64      `schema:"-"`
-	ZDTicket  int        `schema:"zdticket"`
-	UserID    int        `schema:"userid"`
-	Issue     IssueType  `schema:"issue"`
-	Initials  string     `schema:"initials"`
+	ZDTicket  int        `schema:"zdticket,required"`
+	UserID    int        `schema:"userid,required"`
+	Issue     IssueType  `schema:"issue,required"`
+	Initials  string     `schema:"initials,required"`
 	Status    StatusType `schema:"-"`
 	Submitted time.Time
 	Comment   Comment `schema:"comment"`
