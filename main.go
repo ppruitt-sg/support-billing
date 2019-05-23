@@ -33,8 +33,8 @@ func main() {
 	}
 
 	cxIssues := []IssueType{Refund, Terminated, DNAFP, Extension}
-	leadIssues := []IssueType{Discount, Downgrade, UndoDowngrade}
-	allIssues := []IssueType{Refund, Terminated, DNAFP, Extension, Discount, Downgrade, UndoDowngrade}
+	leadIssues := []IssueType{Discount, ForceDowngrade, UndoDowngrade}
+	allIssues := []IssueType{Refund, Terminated, DNAFP, Extension, Discount, ForceDowngrade, UndoDowngrade}
 
 	err = db.NewDB(s.Username + ":" + s.Password + "@tcp(" + s.Hostname + ":" + s.Port + ")/" + s.DBName)
 	if err != nil {

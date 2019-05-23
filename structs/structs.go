@@ -29,7 +29,7 @@ const (
 	Extension
 	MCContacts
 	Discount
-	Downgrade
+	ForceDowngrade
 	UndoDowngrade
 )
 
@@ -47,10 +47,10 @@ func (i IssueType) String() string {
 		return "MC Contacts"
 	case Discount:
 		return "Discount"
-	case Downgrade:
-		return "Force Downgrade"
+	case ForceDowngrade:
+		return "Force Downgrade/Cancellation"
 	case UndoDowngrade:
-		return "Undo Downgrade"
+		return "Undo Downgrade/Cancellation"
 	default:
 		return "[undefined]"
 	}
