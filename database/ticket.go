@@ -7,16 +7,30 @@ import (
 	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
-func (d *DB) UpdateTicket(t Ticket) error {
-	query := `UPDATE tickets
-		SET zdticket=?,
-		userid=?,
-		issue=?,
-		initials=?,
-		status=?
-		WHERE ticket_id=?`
+const queryMCTickets = `SELECT t.ticket_id, t.zdticket, t.userid, t.issue, t.initials, t.status, t.submitted, c.text 
+	FROM tickets t
+	INNER JOIN
+	comments c ON t.ticket_id = c.ticket_id
+	WHERE t.issue=4
+	AND t.submitted >= ?
+	AND t.submitted < ?`
 
-	_, err := d.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Number)
+const querySelectTicket = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted FROM tickets
+WHERE ticket_id=?`
+
+const queryUpdateTicket = `UPDATE tickets
+	SET zdticket=?,
+	userid=?,
+	issue=?,
+	initials=?,
+	status=?
+	WHERE ticket_id=?`
+
+const queryAddTicket = `INSERT INTO tickets (zdticket, userid, issue, initials, status, submitted)
+VALUES (?, ?, ?, ?, ?, ?);`
+
+func (d *DB) UpdateTicket(t Ticket) error {
+	_, err := d.Exec(queryUpdateTicket, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Number)
 	if err != nil {
 		return err
 	}
@@ -26,9 +40,7 @@ func (d *DB) UpdateTicket(t Ticket) error {
 }
 
 func (d *DB) AddTicket(t Ticket) (Ticket, error) {
-	query := `INSERT INTO tickets (zdticket, userid, issue, initials, status, submitted)
-		VALUES (?, ?, ?, ?, ?, ?);`
-	result, err := d.Exec(query, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Submitted.Unix())
+	result, err := d.Exec(queryAddTicket, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Submitted.Unix())
 	if err != nil {
 		return t, err
 	}
@@ -47,9 +59,7 @@ func (d *DB) AddTicket(t Ticket) (Ticket, error) {
 }
 
 func (d *DB) GetTicket(num int64) (Ticket, error) {
-	query := `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted FROM tickets
-		WHERE ticket_id=?`
-	r := d.QueryRow(query, num)
+	r := d.QueryRow(querySelectTicket, num)
 	t := Ticket{}
 	var timestamp int64
 	err := r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
@@ -115,16 +125,7 @@ func (d *DB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueTy
 }
 
 func (d *DB) GetMCTickets(startTime int64, endTime int64) (ts []Ticket, err error) {
-	query := `SELECT t.ticket_id, t.zdticket, t.userid, t.issue, t.initials, t.status, t.submitted, c.text 
-		FROM tickets t
-		INNER JOIN
-		comments c ON t.ticket_id = c.ticket_id
-		WHERE t.issue=4
-		AND t.submitted >= ?
-		AND t.submitted < ?`
-	_ = query
-
-	r, err := d.Query(query, startTime, endTime)
+	r, err := d.Query(queryMCTickets, startTime, endTime)
 	if err != nil {
 		return ts, err
 	}
