@@ -74,7 +74,7 @@ func (s StatusType) String() string {
 	}
 }
 
-// Tickets page structure for paginating
+// Tickets page struct for paginating
 type TicketsPage struct {
 	Type     string
 	Tickets  []Ticket
@@ -83,7 +83,7 @@ type TicketsPage struct {
 	Status   StatusType
 }
 
-func (tp *TicketsPage) SetPages(page int64) {
+func (tp *TicketsPage) SetPrevAndNextPage(page int64) {
 	if len(tp.Tickets) == 10 {
 		tp.NextPage = page + 1
 	}

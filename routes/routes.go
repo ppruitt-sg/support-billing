@@ -103,6 +103,11 @@ func findTicketType(url *url.URL) string {
 	}
 }
 
+func parseNumberFromURL(r *http.Request) (int64, error) {
+	vars := mux.Vars(r)
+	return strconv.ParseInt(vars["number"], 10, 64)
+}
+
 func Home(w http.ResponseWriter, r *http.Request) {
 	New(w, r)
 }
@@ -136,7 +141,7 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 			return
 		}
 
-		tp.SetPages(page)
+		tp.SetPrevAndNextPage(page)
 
 		view.Render(w, "listtickets.gohtml", tp)
 	}
@@ -180,8 +185,7 @@ func Create(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 func Retrieve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Parse "number" variable from URL
-		vars := mux.Vars(r)
-		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
+		ticketNumber, err := parseNumberFromURL(r)
 		if err != nil {
 			logError("Parsing number from URL", err, w)
 			return
@@ -207,8 +211,7 @@ func Retrieve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Parse "number" variable from URL
-		vars := mux.Vars(r)
-		ticketNumber, err := strconv.ParseInt(vars["number"], 10, 64)
+		ticketNumber, err := parseNumberFromURL(r)
 		if err != nil {
 			logError("Parsing number from URL", err, w)
 			return
