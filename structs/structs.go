@@ -82,3 +82,12 @@ type TicketsPage struct {
 	PrevPage int64
 	Status   StatusType
 }
+
+func (tp *TicketsPage) SetPages(page int64) {
+	if len(tp.Tickets) == 10 {
+		tp.NextPage = page + 1
+	}
+
+	// Set previous page
+	tp.PrevPage = page - 1
+}
