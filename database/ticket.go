@@ -16,7 +16,7 @@ const queryMCTickets = `SELECT t.ticket_id, t.zdticket, t.userid, t.issue, t.ini
 	AND t.submitted < ?`
 
 const querySelectTicket = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted FROM tickets
-WHERE ticket_id=?`
+	WHERE ticket_id=?`
 
 const queryUpdateTicket = `UPDATE tickets
 	SET zdticket=?,
@@ -27,7 +27,7 @@ const queryUpdateTicket = `UPDATE tickets
 	WHERE ticket_id=?`
 
 const queryAddTicket = `INSERT INTO tickets (zdticket, userid, issue, initials, status, submitted)
-VALUES (?, ?, ?, ?, ?, ?);`
+	VALUES (?, ?, ?, ?, ?, ?);`
 
 func (d *DB) UpdateTicket(t Ticket) error {
 	_, err := d.Exec(queryUpdateTicket, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Number)

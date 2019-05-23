@@ -6,10 +6,14 @@ import (
 	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
+const queryAddComment = `INSERT INTO comments (timestamp, text, ticket_id)
+	VALUES (?, ?, ?)`
+
+const querySelectComment = `SELECT timestamp, text, ticket_id FROM comments
+	WHERE ticket_id=?`
+
 func (d *DB) AddComment(c Comment) (err error) {
-	query := `INSERT INTO comments (timestamp, text, ticket_id)
-		VALUES (?, ?, ?)`
-	_, err = d.Exec(query, c.Timestamp.Unix(), c.Text, c.TicketNumber)
+	_, err = d.Exec(queryAddComment, c.Timestamp.Unix(), c.Text, c.TicketNumber)
 	if err != nil {
 		return err
 	}
@@ -17,10 +21,7 @@ func (d *DB) AddComment(c Comment) (err error) {
 }
 
 func (d *DB) GetComment(num int64) (c Comment, err error) {
-	query := `SELECT timestamp, text, ticket_id FROM comments
-		WHERE ticket_id=?`
-
-	r := d.QueryRow(query, num)
+	r := d.QueryRow(querySelectComment, num)
 	var ts int64
 	err = r.Scan(&ts, &c.Text, &c.TicketNumber)
 	if err != nil {
