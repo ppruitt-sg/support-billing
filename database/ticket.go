@@ -1,6 +1,9 @@
 package database
 
 import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -28,6 +31,35 @@ const queryUpdateTicket = `UPDATE tickets
 
 const queryAddTicket = `INSERT INTO tickets (zdticket, userid, issue, initials, status, submitted)
 	VALUES (?, ?, ?, ?, ?, ?);`
+
+const querySelect10Open = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
+	FROM tickets 
+	WHERE status=? AND issue IN (%s)
+	LIMIT ?, 10`
+
+const querySelect10Closed = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
+	FROM tickets 
+	WHERE status=? AND issue IN (%s)
+	ORDER BY ticket_id DESC
+	LIMIT ?, 10`
+
+func (d *DB) getTicketsFromRows(r *sql.Rows) (ts []Ticket, err error) {
+	t := Ticket{}
+	var timestamp int64
+	for r.Next() {
+		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
+		if err != nil {
+			return ts, err
+		}
+		// Convert int64 to time.Time
+		t.Submitted = time.Unix(timestamp, 0)
+		ts = append(ts, t)
+	}
+	if r.Err() != nil {
+		return ts, err
+	}
+	return ts, nil
+}
 
 func (d *DB) UpdateTicket(t Ticket) error {
 	_, err := d.Exec(queryUpdateTicket, t.ZDTicket, t.UserID, t.Issue, t.Initials, t.Status, t.Number)
@@ -58,11 +90,11 @@ func (d *DB) AddTicket(t Ticket) (Ticket, error) {
 	return t, nil
 }
 
-func (d *DB) GetTicket(num int64) (Ticket, error) {
-	r := d.QueryRow(querySelectTicket, num)
-	t := Ticket{}
+func (d *DB) GetTicket(num int64) (t Ticket, err error) {
 	var timestamp int64
-	err := r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
+
+	r := d.QueryRow(querySelectTicket, num)
+	err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
 	if err != nil {
 		return Ticket{}, err
 	}
@@ -79,48 +111,31 @@ func (d *DB) GetTicket(num int64) (Ticket, error) {
 func (d *DB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueType) (ts []Ticket, err error) {
 	// Select rows with limit
 	var query string
+
+	// Convert slice of Issues to comma separated numbers
+	s, _ := json.Marshal(issues)
+	strIssues := strings.Trim(string(s), "[]")
+
 	switch status {
 	case StatusOpen:
 		// If status is open list in ascending order
-		query = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
-		FROM tickets 
-		WHERE status=? AND issue IN (?` + strings.Repeat(`,?`, len(issues)-1) + `)
-		LIMIT ?, 10`
+		query = fmt.Sprintf(querySelect10Open, strIssues)
 	case StatusSolved:
 		// If status is solved list in descending order
-		query = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
-		FROM tickets 
-		WHERE status=? AND issue IN (?` + strings.Repeat(`,?`, len(issues)-1) + `)
-		ORDER BY ticket_id DESC
-		LIMIT ?, 10`
+		query = fmt.Sprintf(querySelect10Closed, strIssues)
 	}
-	// Create and append args for DB query
-	args := []interface{}{status}
-	for _, issue := range issues {
-		args = append(args, issue)
-	}
-	args = append(args, offset)
 
-	r, err := d.Query(query, args...)
+	r, err := d.Query(query, status, offset)
 	if err != nil {
 		return ts, err
 	}
 
-	t := Ticket{}
-	var timestamp int64
 	// Create tickets and add to tickets slice
-	for r.Next() {
-		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp)
-		if err != nil {
-			return ts, err
-		}
-		// Convert int64 to time.Time
-		t.Submitted = time.Unix(timestamp, 0)
-		ts = append(ts, t)
-	}
-	if r.Err() != nil {
+	ts, err = d.getTicketsFromRows(r)
+	if err != nil {
 		return ts, err
 	}
+
 	return ts, nil
 }
 
@@ -130,20 +145,11 @@ func (d *DB) GetMCTickets(startTime int64, endTime int64) (ts []Ticket, err erro
 		return ts, err
 	}
 
-	t := Ticket{}
-	var timestamp int64
 	// Create tickets and add to tickets slice
-	for r.Next() {
-		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp, &t.Comment.Text)
-		if err != nil {
-			return ts, err
-		}
-		// Convert int64 to time.Time
-		t.Submitted = time.Unix(timestamp, 0)
-		ts = append(ts, t)
-	}
-	if r.Err() != nil {
+	ts, err = d.getTicketsFromRows(r)
+	if err != nil {
 		return ts, err
 	}
+
 	return ts, nil
 }
