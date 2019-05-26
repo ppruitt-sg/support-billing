@@ -1,7 +1,11 @@
 FROM golang:1.12.5
 
-WORKDIR /src
-COPY . /src
+#Install dep
+ADD https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 /usr/bin/dep
+RUN chmod +x /usr/bin/dep
+
+WORKDIR $GOPATH/src/github.com/ppruitt-sg/support-billing
+COPY . ./
 
 RUN go get github.com/go-sql-driver/mysql
 RUN go get github.com/gorilla/schema
@@ -12,7 +16,6 @@ RUN go get github.com/stretchr/testify/require
 RUN go get github.com/ppruitt-sg/support-billing
 RUN go get github.com/kelseyhightower/envconfig
 
-RUN go get -u github.com/golang/dep/cmd/dep
 RUN dep ensure
 
 RUN go build -o eb-go-app
