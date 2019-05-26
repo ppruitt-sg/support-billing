@@ -118,14 +118,13 @@ func New(w http.ResponseWriter, r *http.Request) {
 
 func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var page int64
 		var tp TicketsPage
-		var err error
 
+		// Get ticket type for title of table on site
 		tp.Type = findTicketType(r.URL)
 
 		// Checks for page parameter
-		page, err = checkPageParameter(r.URL)
+		page, err := checkPageParameter(r.URL)
 		if err != nil {
 			logError("Parsing page parameter", err, w)
 			return
@@ -141,6 +140,7 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 			return
 		}
 
+		// Set the previous and next page
 		tp.SetPrevAndNextPage(page)
 
 		view.Render(w, "listtickets.gohtml", tp)
@@ -156,6 +156,7 @@ func Create(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
+		// Validate input
 		err = validateInput(t)
 		if err != nil {
 			logError("Validating input", err, w)
@@ -172,6 +173,7 @@ func Create(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 			logError("Adding ticket to database", err, w)
 			return
 		}
+
 		// Display submitted text
 		tpl := "submitted.gohtml"
 		err = view.Render(w, tpl, t)
