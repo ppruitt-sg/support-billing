@@ -19,60 +19,97 @@ import (
 ////////////////////////////////
 // Mock DB
 ////////////////////////////////
-type mockDB struct {
-	FakeTicket      Ticket
+type FakeTicketStruct struct {
+	FakeTicket Ticket
+	FakeError  error
+}
+
+type FakeTicketSliceStruct struct {
 	FakeTicketSlice []Ticket
-	FakeComment     Comment
 	FakeError       error
 }
 
+type FakeCommentStruct struct {
+	FakeComment Comment
+	FakeError   error
+}
+type mockDB struct {
+	FakeTicketStruct
+	FakeTicketSliceStruct
+	FakeCommentStruct
+}
+
 func (d mockDB) AddComment(c Comment) error {
-	return d.FakeError
+	return d.FakeCommentStruct.FakeError
 }
 
 func (d mockDB) GetComment(stamp int64) (Comment, error) {
-	return d.FakeComment, d.FakeError
+	return d.FakeCommentStruct.FakeComment, d.FakeCommentStruct.FakeError
 }
 
 func (d mockDB) UpdateTicket(t Ticket) error {
-	return d.FakeError
+	return d.FakeCommentStruct.FakeError
 }
 
 func (d mockDB) AddTicket(t Ticket) (Ticket, error) {
-	return d.FakeTicket, d.FakeError
+	return d.FakeTicketStruct.FakeTicket, d.FakeTicketStruct.FakeError
 }
 
 func (d mockDB) GetTicket(number int64) (Ticket, error) {
-	return d.FakeTicket, d.FakeError
+	return d.FakeTicketStruct.FakeTicket, d.FakeTicketStruct.FakeError
 }
 
 func (d mockDB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueType) ([]Ticket, error) {
-	return d.FakeTicketSlice, d.FakeError
+	return d.FakeTicketSliceStruct.FakeTicketSlice, d.FakeTicketSliceStruct.FakeError
 }
 
 func (d mockDB) GetMCTickets(start int64, end int64) ([]Ticket, error) {
-	return d.FakeTicketSlice, d.FakeError
+	return d.FakeTicketSliceStruct.FakeTicketSlice, d.FakeTicketSliceStruct.FakeError
 }
 
 var expectedDB = mockDB{
-	Ticket{},
-	[]Ticket{},
-	Comment{},
-	nil,
+	FakeTicketStruct{ // Fake Ticket
+		Ticket{},
+		nil,
+	},
+	FakeTicketSliceStruct{ // Fake Ticket Slice
+		[]Ticket{},
+		nil,
+	},
+	FakeCommentStruct{ // Fake Ticket
+		Comment{},
+		nil,
+	},
 }
 
 var errorDB = mockDB{
-	Ticket{},
-	[]Ticket{},
-	Comment{},
-	errors.New("Generic error"),
+	FakeTicketStruct{ // Fake Ticket
+		Ticket{},
+		errors.New("Generic error"),
+	},
+	FakeTicketSliceStruct{ // Fake Ticket Slice
+		[]Ticket{},
+		errors.New("Generic error"),
+	},
+	FakeCommentStruct{ // Fake Ticket
+		Comment{},
+		errors.New("Generic error"),
+	},
 }
 
 var rowNotFoundDB = mockDB{
-	Ticket{},
-	[]Ticket{},
-	Comment{},
-	sql.ErrNoRows,
+	FakeTicketStruct{ // Fake Ticket
+		Ticket{},
+		sql.ErrNoRows,
+	},
+	FakeTicketSliceStruct{ // Fake Ticket Slice
+		[]Ticket{},
+		sql.ErrNoRows,
+	},
+	FakeCommentStruct{ // Fake Ticket
+		Comment{},
+		sql.ErrNoRows,
+	},
 }
 
 func TestNewHandler(t *testing.T) {
