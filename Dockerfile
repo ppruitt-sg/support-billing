@@ -16,9 +16,9 @@ COPY . ./
 # RUN go get github.com/stretchr/testify/require
 # RUN go get github.com/ppruitt-sg/support-billing
 # RUN go get github.com/kelseyhightower/envconfig
-
-# RUN dep ensure
 ###################################################################
+
+RUN dep ensure
 
 RUN go build -o eb-go-app
 
