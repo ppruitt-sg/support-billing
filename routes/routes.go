@@ -243,6 +243,7 @@ func Admin(d database.Datastore) func(w http.ResponseWriter, r *http.Request) {
 		ts, err := retrieveMCTickets(d)
 		if err != nil {
 			logError("Error retrieving MC Tickets", err, w)
+			return
 		}
 		_ = ts
 		view.Render(w, "admin.gohtml", ts)
