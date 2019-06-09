@@ -10,7 +10,7 @@ import (
 	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
-const queryMCTickets = `SELECT t.ticket_id, t.zdticket, t.userid, t.issue, t.initials, t.status, t.submitted, c.text 
+const queryMCTickets = `SELECT t.userid, c.text 
 	FROM tickets t
 	INNER JOIN
 	comments c ON t.ticket_id = c.ticket_id
@@ -140,14 +140,21 @@ func (d *DB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueTy
 }
 
 func (d *DB) GetMCTickets(startTime int64, endTime int64) (ts []Ticket, err error) {
+	t := Ticket{}
 	r, err := d.Query(queryMCTickets, startTime, endTime)
 	if err != nil {
 		return ts, err
 	}
 
-	// Create tickets and add to tickets slice
-	ts, err = d.getTicketsFromRows(r)
-	if err != nil {
+	// Add ticket userID and ticket Comment text
+	for r.Next() {
+		err = r.Scan(&t.UserID, &t.Comment.Text)
+		if err != nil {
+			return ts, err
+		}
+		ts = append(ts, t)
+	}
+	if r.Err() != nil {
 		return ts, err
 	}
 
