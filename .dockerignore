@@ -4,3 +4,6 @@ app-env
 .elasticbeanstalk/*
 .git
 .gitignore
+
+# Dep folder
+vendor
