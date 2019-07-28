@@ -35,6 +35,10 @@ func retrieveMCTickets(d database.Datastore) ([]Ticket, error) {
 func logError(action string, err error, w http.ResponseWriter) {
 	// Print action and error message
 	log.Printf("Error - %s - %v", action, err)
+
+	// Wrote just for localhost
+	//kafka.WriteError(action, err)
+
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
