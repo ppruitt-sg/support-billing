@@ -53,6 +53,8 @@ func main() {
 	r.HandleFunc("/view/lead/", routes.Retrieve10(&db, StatusOpen, leadIssues...)).Methods("GET")
 	r.HandleFunc("/view/solved/", routes.Retrieve10(&db, StatusSolved, allIssues...)).Methods("GET")
 	r.HandleFunc("/view/{number:[0-9]+}", routes.Retrieve(&db)).Methods("GET")
+	r.HandleFunc("/edit/{number:[0-9]+}", routes.Edit(&db)).Methods("GET")
+	r.HandleFunc("/update/{number:[0-9]+}", routes.Update(&db)).Methods("POST")
 	r.HandleFunc("/solve/{number:[0-9]+}", routes.Solve(&db)).Methods("POST")
 	r.HandleFunc("/admin", routes.Admin(&db)).Methods("GET")
 

@@ -14,6 +14,7 @@ type Datastore interface {
 	// Comment
 	AddComment(Comment) error
 	GetComment(int64) (Comment, error)
+	UpdateComment(Comment) (err error)
 	// Ticket
 	UpdateTicket(Ticket) error
 	AddTicket(Ticket) (Ticket, error)

@@ -9,7 +9,7 @@ import (
 const queryAddComment = `INSERT INTO comments (timestamp, text, ticket_id)
 	VALUES (?, ?, ?)`
 
-const querySelectComment = `SELECT timestamp, text, ticket_id FROM comments
+const querySelectComment = `SELECT comment_id, timestamp, text, ticket_id FROM comments
 	WHERE ticket_id=?`
 
 func (d *DB) AddComment(c Comment) (err error) {
@@ -23,7 +23,7 @@ func (d *DB) AddComment(c Comment) (err error) {
 func (d *DB) GetComment(num int64) (c Comment, err error) {
 	r := d.QueryRow(querySelectComment, num)
 	var ts int64
-	err = r.Scan(&ts, &c.Text, &c.TicketNumber)
+	err = r.Scan(&c.ID, &ts, &c.Text, &c.TicketNumber)
 	if err != nil {
 		return c, err
 	}
@@ -31,4 +31,17 @@ func (d *DB) GetComment(num int64) (c Comment, err error) {
 	c.Timestamp = time.Unix(ts, 0)
 
 	return c, nil
+}
+
+func (d *DB) UpdateComment(c Comment) (err error) {
+	queryUpdateComment := `UPDATE comments
+	SET text=?
+	WHERE comment_id=?`
+
+	_, err = d.Exec(queryUpdateComment, c.Text, c.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

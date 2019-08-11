@@ -67,6 +67,11 @@ func (d *DB) UpdateTicket(t Ticket) error {
 		return err
 	}
 
+	err = d.UpdateComment(t.Comment)
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }

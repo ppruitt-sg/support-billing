@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF=8">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide.css" rel="stylesheet">
+<link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide-grid.css" rel="stylesheet">
+<link href="/assets/css/style.css" rel="stylesheet">
+<script src="/assets/js/AutoExpand.js"></script>
+<title>Edit Ticket</title>
+</head>
+<body>
+{{template "header"}}
+<div class="row">
+    <div class="col-4 col-start-2">
+        <h1>Ticket {{.Number}}</h1>
+    </div>
+</div>
+<div class="row">
+    <div class="col-8 col-start-2">
+        <form action="/update/{{.Number}}" method="POST">    
+            <table class="table-wrap is-auto-width">
+                <tr>
+                    <td><strong>Submitted</strong></td>
+                    <td><span class="mono">{{.Submitted | ToDateTime}}</span></td>
+                </tr>
+                <tr>
+                    <td><strong class="is-required">UserID</strong></td>
+                    <td>
+                        <div class="input-text-wrap">
+                            <input type="number" name="userid" id="userid-input" max="2147483647" value="{{.UserID}}" required>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Zendesk Ticket</strong></td>
+                    <td>
+                        <div class="input-text-wrap is-required is-focused">
+                            <input type="number" name="zdticket" id="zdticket-input" max="2147483647" value="{{.ZDTicket}}" required>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Issue Type</strong></td>
+                    <td>
+                        <div class="input-select">
+                            <select id="issue-input" name="issue" required>
+                                <option {{if (eq .Issue  0)}} selected="true" {{end}} value="0">Refund</option>
+                                <option {{if (eq .Issue  1)}} selected="true" {{end}} value="1">Billing Terminated</option>
+                                <option {{if (eq .Issue  2)}} selected="true" {{end}} value="2">DNA FP Reactivation</option>
+                                <option {{if (eq .Issue  3)}} selected="true" {{end}} value="3">Extension</option>
+                                <option {{if (eq .Issue  4)}} selected="true" {{end}} value="4">MC Contacts</option>
+                                <option {{if (eq .Issue  5)}} selected="true" {{end}} value="5">Discount</option>
+                                <option {{if (eq .Issue  6)}} selected="true" {{end}} value="6">Force Downgrade/Cancellation</option>
+                                <option {{if (eq .Issue  7)}} selected="true" {{end}} value="7">Undo Downgrade/Cancellation</option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Initials</strong></td>
+                    <td>
+                        <div class="input-text-wrap is-required is-focused">
+                            <input type="text" name="initials" maxlength="8" value="{{.Initials}}" required>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Status</strong></td>
+                    <td><span class="mono">{{.Status}}</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Additional Comments</strong></td>
+                    <td>
+                        <div class="textarea-wrap">
+                            <textarea class="textarea-input" id="comment-input" name="comment.text" maxlength="200" style="height: {{.Comment.Text | GetFieldHeight}}px;">{{.Comment.Text}}</textarea>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <button class="btn btn-primary" type="submit">Save Changes</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

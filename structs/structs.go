@@ -3,21 +3,31 @@ package structs
 import "time"
 
 type Comment struct {
-	Timestamp    time.Time
-	Text         string `schema:"text"`
-	TicketNumber int64
+	ID           int64     `schema:"-"`
+	Timestamp    time.Time `schema:"-"`
+	Text         string    `schema:"text"`
+	TicketNumber int64     `schema:"-"`
 }
 
 // Ticket structure
 type Ticket struct {
-	Number    int64      `schema:"-"`
+	Number    int64
 	ZDTicket  int        `schema:"zdticket,required"`
 	UserID    int        `schema:"userid,required"`
 	Issue     IssueType  `schema:"issue,required"`
 	Initials  string     `schema:"initials,required"`
 	Status    StatusType `schema:"-"`
-	Submitted time.Time
-	Comment   Comment `schema:"comment"`
+	Submitted time.Time  `schema:"-"`
+	Comment   Comment    `schema:"comment"`
+}
+
+func (t *Ticket) Patch(updatedTicket Ticket) {
+	t.ZDTicket = updatedTicket.ZDTicket
+	t.UserID = updatedTicket.UserID
+	t.Issue = updatedTicket.Issue
+	t.Initials = updatedTicket.Initials
+	t.Status = updatedTicket.Status
+	t.Comment.Text = updatedTicket.Comment.Text
 }
 
 type IssueType int

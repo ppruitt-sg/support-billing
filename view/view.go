@@ -15,10 +15,11 @@ func init() {
 	var err error
 
 	funcMap := template.FuncMap{
-		"ToLower":    strings.ToLower,
-		"ToDateTime": toDateTime,
-		"ToDate":     toDate,
-		"AddBreaks":  addBreaks,
+		"ToLower":        strings.ToLower,
+		"ToDateTime":     toDateTime,
+		"ToDate":         toDate,
+		"AddBreaks":      addBreaks,
+		"GetFieldHeight": getFieldHeight,
 	}
 
 	// Parse templates in /template
@@ -57,4 +58,9 @@ func toDate(t time.Time) string {
 func addBreaks(s string) template.HTML {
 	// Convert newline to HTML readable line break
 	return template.HTML(strings.Replace(template.HTMLEscapeString(s), "\r\n", "<br>", -1))
+}
+
+func getFieldHeight(s string) int {
+	// Used to get comment field height based on text line count.
+	return len(strings.Split(s, "\n")) * 25
 }

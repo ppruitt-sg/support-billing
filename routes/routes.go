@@ -42,8 +42,8 @@ func logError(action string, err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
-func parseNewForm(r *http.Request) (t Ticket, err error) {
-	// Parse the new ticket form in /templates/new.gohtml
+func parseForm(r *http.Request) (t Ticket, err error) {
+	// Parse the new form in /templates/new.gohtml
 	err = r.ParseForm()
 	if err != nil {
 		return t, err
@@ -154,7 +154,7 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 func Create(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Decode form post to Ticket struct
-		t, err := parseNewForm(r)
+		t, err := parseForm(r)
 		if err != nil {
 			logError("Parsing new ticket form", err, w)
 			return
@@ -211,6 +211,65 @@ func Retrieve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 		view.Render(w, "viewticket.gohtml", t)
+	}
+}
+
+func Edit(d database.Datastore) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Parse "number" variable from URL
+		ticketNumber, err := parseNumberFromURL(r)
+		if err != nil {
+			logError("Parsing number from URL", err, w)
+			return
+		}
+
+		// Get specific ticket number
+		t, err := d.GetTicket(ticketNumber)
+		if err != nil {
+			switch err {
+			// If the ticket doesn't exist, return 404 and display ticketnotfound.gohtml
+			case sql.ErrNoRows:
+				w.WriteHeader(http.StatusNotFound)
+				view.Render(w, "ticketnotfound.gohtml", ticketNumber)
+			default:
+				logError("Getting ticket from DB", err, w)
+			}
+			return
+		}
+		view.Render(w, "editticket.gohtml", t)
+	}
+}
+
+func Update(d database.Datastore) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Parse "number" variable from URL
+		ticketNumber, err := parseNumberFromURL(r)
+		if err != nil {
+			logError("Parsing number from URL", err, w)
+			return
+		}
+
+		// Get specific ticket number
+		ticket, err := d.GetTicket(ticketNumber)
+		if err != nil {
+			logError(fmt.Sprintf("Getting ticket %d from database", ticketNumber), err, w)
+			return
+		}
+
+		// Update ticket and update it to the database
+		updatedTicket, err := parseForm(r)
+
+		fmt.Printf("UserID: %d\nZenDesk Ticket: %d\n", updatedTicket.UserID, updatedTicket.ZDTicket)
+
+		ticket.Patch(updatedTicket)
+
+		err = d.UpdateTicket(ticket)
+		if err != nil {
+			logError(fmt.Sprintf("Updating ticket %d in database", ticketNumber), err, w)
+			return
+		}
+		// Redirect back to the ticket view
+		http.Redirect(w, r, "/view/"+strconv.FormatInt(ticket.Number, 10), http.StatusMovedPermanently)
 	}
 }
 

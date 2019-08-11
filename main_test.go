@@ -47,8 +47,12 @@ func (d mockDB) GetComment(stamp int64) (Comment, error) {
 	return d.FakeCommentStruct.FakeComment, d.FakeCommentStruct.FakeError
 }
 
-func (d mockDB) UpdateTicket(t Ticket) error {
+func (d mockDB) UpdateComment(c Comment) error {
 	return d.FakeCommentStruct.FakeError
+}
+
+func (d mockDB) UpdateTicket(t Ticket) error {
+	return d.FakeTicketStruct.FakeError
 }
 
 func (d mockDB) AddTicket(t Ticket) (Ticket, error) {
@@ -188,6 +192,38 @@ func TestSolveTicketHandler(t *testing.T) {
 	for _, test := range tests {
 		r = mux.NewRouter()
 		r.HandleFunc("/solve/{number}", routes.Solve(test.db))
+		r.HandleFunc("/view/{number}", routes.Retrieve(test.db))
+
+		rr = httptest.NewServer(r)
+
+		require.NotNil(t, r)
+		require.NotNil(t, rr)
+		url := rr.URL + "/view/" + test.n
+		resp, err := http.Post(url, "", nil)
+		require.Nil(t, err)
+
+		assert.Equal(t, resp.StatusCode, test.expected)
+	}
+}
+
+func TestUpdateTicketHandler(t *testing.T) {
+	var rr *httptest.Server
+	var r *mux.Router
+	var tests = []struct {
+		n        string // ticket number
+		expected int
+		db       mockDB
+	}{
+		{"1", 200, expectedDB},
+		{"2", 404, rowNotFoundDB},
+		{"", 404, expectedDB},
+		{"1", 500, errorDB},
+		{"25325235235235235235253", 500, expectedDB},
+	}
+
+	for _, test := range tests {
+		r = mux.NewRouter()
+		r.HandleFunc("/update/{number}", routes.Update(test.db))
 		r.HandleFunc("/view/{number}", routes.Retrieve(test.db))
 
 		rr = httptest.NewServer(r)
