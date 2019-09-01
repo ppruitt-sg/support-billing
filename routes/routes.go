@@ -112,6 +112,15 @@ func parseNumberFromURL(r *http.Request) (int64, error) {
 	return strconv.ParseInt(vars["number"], 10, 64)
 }
 
+func containsIssue(issueTypeSlice []IssueType, issue IssueType) bool {
+	for _, value := range issueTypeSlice {
+		if value == issue {
+			return true
+		}
+	}
+	return false
+}
+
 func Home(w http.ResponseWriter, r *http.Request) {
 	New(w, r)
 }
@@ -256,13 +265,11 @@ func Update(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		// Update ticket and update it to the database
+		// Get updated ticket information and patch it into the original ticket
 		updatedTicket, err := parseForm(r)
-
-		fmt.Printf("UserID: %d\nZenDesk Ticket: %d\n", updatedTicket.UserID, updatedTicket.ZDTicket)
-
 		ticket.Patch(updatedTicket)
 
+		// Update the ticket
 		err = d.UpdateTicket(ticket)
 		if err != nil {
 			logError(fmt.Sprintf("Updating ticket %d in database", ticketNumber), err, w)
@@ -275,6 +282,7 @@ func Update(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 
 func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var redirectURL = "/view/"
 		// Parse "number" variable from URL
 		ticketNumber, err := parseNumberFromURL(r)
 		if err != nil {
@@ -296,8 +304,14 @@ func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 			logError(fmt.Sprintf("Updating ticket %d in database", ticketNumber), err, w)
 			return
 		}
-		// Redirect back to the ticket view
-		http.Redirect(w, r, "/view/"+strconv.FormatInt(t.Number, 10), http.StatusMovedPermanently)
+
+		if containsIssue(LeadIssues, t.Issue) {
+			redirectURL += "lead/"
+		} else {
+			redirectURL += "cx/"
+		}
+		// Redirect back to the tickets view
+		http.Redirect(w, r, redirectURL, http.StatusMovedPermanently)
 	}
 }
 

@@ -32,10 +32,6 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	cxIssues := []IssueType{Refund, Terminated, DNAFP, Extension}
-	leadIssues := []IssueType{Discount, ForceDowngrade, UndoDowngrade}
-	allIssues := []IssueType{Refund, Terminated, DNAFP, Extension, Discount, ForceDowngrade, UndoDowngrade}
-
 	err = db.NewDB(s.Username + ":" + s.Password + "@tcp(" + s.Hostname + ":" + s.Port + ")/" + s.DBName)
 	if err != nil {
 		log.Fatalln(err)
@@ -49,9 +45,9 @@ func main() {
 	r.HandleFunc("/", routes.Home).Methods("GET")
 	r.HandleFunc("/new/", routes.New).Methods("GET")
 	r.HandleFunc("/create", routes.Create(&db)).Methods("POST")
-	r.HandleFunc("/view/cx/", routes.Retrieve10(&db, StatusOpen, cxIssues...)).Methods("GET")
-	r.HandleFunc("/view/lead/", routes.Retrieve10(&db, StatusOpen, leadIssues...)).Methods("GET")
-	r.HandleFunc("/view/solved/", routes.Retrieve10(&db, StatusSolved, allIssues...)).Methods("GET")
+	r.HandleFunc("/view/cx/", routes.Retrieve10(&db, StatusOpen, CXIssues...)).Methods("GET")
+	r.HandleFunc("/view/lead/", routes.Retrieve10(&db, StatusOpen, LeadIssues...)).Methods("GET")
+	r.HandleFunc("/view/solved/", routes.Retrieve10(&db, StatusSolved, AllIssues...)).Methods("GET")
 	r.HandleFunc("/view/{number:[0-9]+}", routes.Retrieve(&db)).Methods("GET")
 	r.HandleFunc("/edit/{number:[0-9]+}", routes.Edit(&db)).Methods("GET")
 	r.HandleFunc("/update/{number:[0-9]+}", routes.Update(&db)).Methods("POST")

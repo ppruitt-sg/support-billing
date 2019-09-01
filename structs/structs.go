@@ -101,3 +101,7 @@ func (tp *TicketsPage) SetPrevAndNextPage(page int64) {
 	// Set previous page
 	tp.PrevPage = page - 1
 }
+
+var CXIssues = []IssueType{Refund, Terminated, DNAFP, Extension}
+var LeadIssues = []IssueType{Discount, ForceDowngrade, UndoDowngrade}
+var AllIssues = []IssueType{Refund, Terminated, DNAFP, Extension, Discount, ForceDowngrade, UndoDowngrade}
