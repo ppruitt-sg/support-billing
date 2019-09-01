@@ -86,11 +86,12 @@ func (s StatusType) String() string {
 
 // Tickets page struct for paginating
 type TicketsPage struct {
-	Type     string
-	Tickets  []Ticket
-	NextPage int64
-	PrevPage int64
-	Status   StatusType
+	SolvedTicket int64
+	Type         string
+	Tickets      []Ticket
+	NextPage     int64
+	PrevPage     int64
+	Status       StatusType
 }
 
 func (tp *TicketsPage) SetPrevAndNextPage(page int64) {

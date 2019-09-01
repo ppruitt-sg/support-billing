@@ -8,6 +8,11 @@
 <title>View Tickets</title>
 </head>
 <body>
+{{ if ( ge .SolvedTicket 1) }}
+<div class="alert alert-verification">
+  <p>Ticket <a href="/view/{{.SolvedTicket}}/">#{{.SolvedTicket}}</a> has been solved</p>
+</div>
+{{end}}
 {{template "header" .Type }}
 <div class="row">
   <div class="col-5 col-start-2">

@@ -76,17 +76,13 @@ func validateInput(t Ticket) (err error) {
 	return nil
 }
 
-func checkPageParameter(url *url.URL) (int64, error) {
+func checkURLParameter(url *url.URL, parameter string) string {
 	// Checks for page parameter
-	if keys, ok := url.Query()["page"]; ok {
-		page, err := strconv.ParseInt(keys[0], 10, 64)
-		if err != nil {
-			return page, err
-		}
-		return page, nil
+	if keys, ok := url.Query()[parameter]; ok {
+		return keys[0]
 	}
-	// If it doesn't exist, set page to 1
-	return 1, nil
+	// If it doesn't exist, return empty string
+	return ""
 }
 
 func findTicketType(url *url.URL) string {
@@ -132,15 +128,35 @@ func New(w http.ResponseWriter, r *http.Request) {
 func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var tp TicketsPage
+		var page int64
+		var solvedTicket int64
+		var err error
 
 		// Get ticket type for title of table on site
 		tp.Type = findTicketType(r.URL)
 
 		// Checks for page parameter
-		page, err := checkPageParameter(r.URL)
-		if err != nil {
-			logError("Parsing page parameter", err, w)
-			return
+		parameter := checkURLParameter(r.URL, "page")
+
+		if parameter != "" {
+			page, err = strconv.ParseInt(parameter, 10, 64)
+			if err != nil {
+				logError(fmt.Sprintf("Converting page parameter %s", parameter), err, w)
+			}
+		} else {
+			page = 1
+		}
+
+		// Checks for solved_ticket parameter
+		parameter = checkURLParameter(r.URL, "solved_ticket")
+
+		if parameter != "" {
+			solvedTicket, err = strconv.ParseInt(parameter, 10, 64)
+			if err != nil {
+				logError(fmt.Sprintf("Converting page parameter %s", parameter), err, w)
+			}
+		} else {
+			solvedTicket = 0
 		}
 
 		// Get offset value based off page number
@@ -155,6 +171,7 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 
 		// Set the previous and next page
 		tp.SetPrevAndNextPage(page)
+		tp.SolvedTicket = solvedTicket
 
 		view.Render(w, "listtickets.gohtml", tp)
 	}
@@ -282,7 +299,8 @@ func Update(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 
 func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var redirectURL = "/view/"
+		var redirectURL = "/view/%s/?solved_ticket=%d"
+		var ticketType string
 		// Parse "number" variable from URL
 		ticketNumber, err := parseNumberFromURL(r)
 		if err != nil {
@@ -306,12 +324,13 @@ func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 		}
 
 		if containsIssue(LeadIssues, t.Issue) {
-			redirectURL += "lead/"
+			ticketType = "lead"
 		} else {
-			redirectURL += "cx/"
+			ticketType = "cx"
 		}
+
 		// Redirect back to the tickets view
-		http.Redirect(w, r, redirectURL, http.StatusMovedPermanently)
+		http.Redirect(w, r, fmt.Sprintf(redirectURL, ticketType, t.Number), http.StatusMovedPermanently)
 	}
 }
 
