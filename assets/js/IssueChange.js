@@ -1,3 +1,5 @@
+// Add field when Issue is Billing Terminated
+
 $(document).on('change','#issue-input',function(){
     var selection = $(this).val();
     switch(selection){

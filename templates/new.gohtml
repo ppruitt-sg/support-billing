@@ -6,9 +6,8 @@
 <link href="https://uiux.s3.amazonaws.com/style-guide/css/style-guide-grid.css" rel="stylesheet">
 <link href="/assets/css/style.css" rel="stylesheet">
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-<script src="/assets/js/AutoExpand.js"></script>
-<script src="/assets/js/IssueChange.js"></script>
+
+
 
 <title>New Ticket</title>
 </head>
@@ -22,28 +21,29 @@
     </div>
     <form action="/create" method="POST">
     <div class="row">
-        <div class="input-text-wrap is-required is-focused col-2 col-start-2">
+        <div class="input-text-wrap is-required col-2 col-start-2" id="userid-wrap">
             <label class="input-text-label" for="userid-input">UserID</label>
-            <input type="number" name="userid" id="userid-input" max="2147483647" required>
+            <input type="number" name="userid" id="userid-input" max="2147483647" onclick="focusParent(this)" required>
         </div>
     </div>
     <div class="row">
-        <div class="input-text-wrap is-required is-focused col-2 col-start-2">
+        <div class="input-text-wrap is-required col-2 col-start-2">
             <label class="input-text-label" for="zdticket-input">Zendesk Ticket</label>
-            <input type="number" name="zdticket" id="zdticket-input" max="2147483647" required>
+            <input type="number" name="zdticket" id="zdticket-input" max="2147483647" onclick="focusParent(this)" required>
         </div>
     </div>
     <div class="row">
         <div class="input-select-wrap is-required col-2 col-start-2">
             <label class="input-select-label" for="issue-input">Issue</label>
             <div class="input-select">
-                <select id="issue-input" name="issue" required>
+                <select onchange="addText()" id="issue-input" name="issue" required>
                     <option selected="true" value="">Select an issue</option>
                     <option value="0">Refund</option>
-                    <option value="1">Billing Terminated</option>
+                    <option value="1" >Billing Terminated</option>
                     <option value="2">DNA FP Reactivation</option>
                     <option value="3">Extension</option>
-                    <option value="4">MC Contacts</option>
+                    <option value="4">Legacy Contacts</option>
+                    <option value="4">TNE Contacts</option>
                     <option value="5">Discount</option>
                     <option value="6">Force Downgrade/Cancellation</option>
                     <option value="7">Undo Downgrade/Cancellation</option>
@@ -58,15 +58,15 @@
         </div>
     </div>
     <div class="row">
-        <div class="input-text-wrap is-required is-focused col-2 col-start-2">
+        <div class="input-text-wrap is-required col-2 col-start-2">
             <label class="input-text-label">Initials</label>
-            <input type="text" name="initials" maxlength="8" required>
+            <input type="text" name="initials" maxlength="8" onclick="focusParent(this)" required>
         </div>
     </div>
     <div class="row">
-        <div class="textarea-wrap is-required is-focused col-6 col-start-2 autoExpand">
+        <div class="textarea-wrap is-required col-6 col-start-2 autoExpand">
             <label class="textarea-label" for="comment-input">Additional Comments</label>
-            <textarea class="textarea-input" id="comment-input" name="comment.text" rows="1" maxlength="200" required></textarea>
+            <textarea class="textarea-input autoExpand" id="comment-input" name="comment.text" rows="1" maxlength="200" onclick="focusParent(this)" required></textarea>
         </div>
     </div>
     <div class="row">
@@ -75,4 +75,8 @@
     </form>
 </div>
 </body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+<script src="/assets/js/scripts.js"></script>
+<script src="/assets/js/AutoExpand.js"></script>
+<script src="/assets/js/IssueChange.js"></script>
 </html>
