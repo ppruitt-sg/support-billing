@@ -49,14 +49,15 @@ function focusParent(elem) {
 
 const issueSelector = document.getElementById("issue-input");
 const commentTextField = document.getElementById("comment-input");
+const addCommentText = "## Please add more comments ##"
 
 function addText() {
   const selectedIssue = issueSelector.options[issueSelector.selectedIndex].text;
   if (selectedIssue === "Legacy Contacts") {
-      commentTextField.value = "Legacy -";
+      commentTextField.value = "Legacy - ".concat(addCommentText);
       focusParent(commentTextField);
   } else if (selectedIssue === "TNE Contacts") {
-    commentTextField.value = "TNE -";
+    commentTextField.value = "TNE - ".concat(addCommentText);
     focusParent(commentTextField);
 }
 }
