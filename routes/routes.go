@@ -77,7 +77,7 @@ func validateInput(t Ticket) (err error) {
 }
 
 func checkURLParameter(url *url.URL, parameter string) string {
-	// Checks for page parameter
+	// Checks for URL parameter
 	if keys, ok := url.Query()[parameter]; ok {
 		return keys[0]
 	}
@@ -142,6 +142,7 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 			page, err = strconv.ParseInt(parameter, 10, 64)
 			if err != nil {
 				logError(fmt.Sprintf("Converting page parameter %s", parameter), err, w)
+				return
 			}
 		} else {
 			page = 1
@@ -154,6 +155,7 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 			solvedTicket, err = strconv.ParseInt(parameter, 10, 64)
 			if err != nil {
 				logError(fmt.Sprintf("Converting page parameter %s", parameter), err, w)
+				return
 			}
 		} else {
 			solvedTicket = 0
