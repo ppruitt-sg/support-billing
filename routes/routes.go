@@ -18,18 +18,18 @@ import (
 	"github.com/ppruitt-sg/support-billing/view"
 )
 
-func retrieveMCTickets(d database.Datastore) ([]Ticket, error) {
+func retrieveMCTickets(d database.Datastore) (legacy []Ticket, tne []Ticket, err error) {
 	currentMonth := time.Now()
 	pacific, err := time.LoadLocation("America/Los_Angeles")
 	startOfCurrentMonth := time.Date(currentMonth.Year(), currentMonth.Month(), 1, 0, 0, 0, 0, pacific)
 	startOfNextMonth := startOfCurrentMonth.AddDate(0, 1, 0)
 
-	ts, err := d.GetMCTickets(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
+	legacy, tne, err = d.GetMCTickets(startOfCurrentMonth.Unix(), startOfNextMonth.Unix())
 	if err != nil {
-		return ts, err
+		return legacy, tne, err
 	}
 
-	return ts, nil
+	return legacy, tne, nil
 }
 
 func logError(action string, err error, w http.ResponseWriter) {
@@ -338,13 +338,24 @@ func Solve(d database.Datastore) func(http.ResponseWriter, *http.Request) {
 
 func Admin(d database.Datastore) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ts, err := retrieveMCTickets(d)
+		legacyTickets, tneTickets, err := retrieveMCTickets(d)
 		if err != nil {
 			logError("Error retrieving MC Tickets", err, w)
 			return
 		}
-		_ = ts
-		view.Render(w, "admin.gohtml", ts)
+		_ = tneTickets
+
+		mcTickets := struct {
+			LegacyTickets []Ticket
+			TNETickets    []Ticket
+		}{
+			legacyTickets,
+			tneTickets,
+		}
+
+		fmt.Println(mcTickets.LegacyTickets)
+		fmt.Println(mcTickets.TNETickets)
+		view.Render(w, "admin.gohtml", mcTickets)
 	}
 }
 

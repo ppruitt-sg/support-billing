@@ -20,7 +20,7 @@ type Datastore interface {
 	AddTicket(Ticket) (Ticket, error)
 	GetTicket(int64) (Ticket, error)
 	GetNext10Tickets(int64, StatusType, ...IssueType) ([]Ticket, error)
-	GetMCTickets(int64, int64) ([]Ticket, error)
+	GetMCTickets(int64, int64) ([]Ticket, []Ticket, error)
 }
 
 func (d *DB) NewDB(dataSourceName string) (err error) {

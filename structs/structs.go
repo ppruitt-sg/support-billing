@@ -33,14 +33,16 @@ func (t *Ticket) Patch(updatedTicket Ticket) {
 type IssueType int
 
 const (
-	Refund = iota
-	Terminated
-	DNAFP
-	Extension
-	MCContacts
-	Discount
-	ForceDowngrade
-	UndoDowngrade
+	Refund         = iota // 0
+	Terminated            // 1
+	DNAFP                 // 2
+	Extension             // 3
+	MCContacts            // 4 (DEPRECATED)
+	Discount              // 5
+	ForceDowngrade        // 6
+	UndoDowngrade         // 7
+	LegacyContacts        // 8
+	TNEContacts           // 9
 )
 
 func (i IssueType) String() string {
@@ -54,13 +56,17 @@ func (i IssueType) String() string {
 	case Extension:
 		return "Extension"
 	case MCContacts:
-		return "MC Contacts"
+		return "MC Contacts (deprecated)"
 	case Discount:
 		return "Discount"
 	case ForceDowngrade:
 		return "Force Downgrade/Cancellation"
 	case UndoDowngrade:
 		return "Undo Downgrade/Cancellation"
+	case LegacyContacts:
+		return "Legacy Contacts"
+	case TNEContacts:
+		return "TNE Contacts"
 	default:
 		return "[undefined]"
 	}

@@ -16,12 +16,25 @@
         <div class="col-10 col-start-2">
             <h2>Admin</h2>
         </div>
-        <div class="col-9 col-start-3">
-            <h2>MC Contact UserIDs and comments for this month:</h2>
-            {{range . }}
-            <p>{{.UserID}} - {{.Comment.Text}}</p>
-            {{end}}
+    </div>
+    <div class="row">
+        <div class="col-4 col-start-2">
+            <table class="table-wrap">
+                <thead><tr><th>Legacy Contacts UserIDs</th></tr></thead>
+                {{range .LegacyTickets }}
+                <tr><td>{{.UserID}}</td></tr>
+                {{end}}
+            </table>
         </div>
+        <div class="col-4 col-start-6">
+            <table class="table-wrap">
+                <thead><tr><th>TNE Contacts UserIDs</th></tr></thead>
+                {{range .TNETickets }}
+                <tr><td>{{.UserID}}</td></tr>
+                {{end}}
+            </table>
+        </div>
+    </div>
 </div>
 </body>
 </html>

@@ -67,8 +67,8 @@ func (d mockDB) GetNext10Tickets(offset int64, status StatusType, issues ...Issu
 	return d.FakeTicketSliceStruct.FakeTicketSlice, d.FakeTicketSliceStruct.FakeError
 }
 
-func (d mockDB) GetMCTickets(start int64, end int64) ([]Ticket, error) {
-	return d.FakeTicketSliceStruct.FakeTicketSlice, d.FakeTicketSliceStruct.FakeError
+func (d mockDB) GetMCTickets(start int64, end int64) ([]Ticket, []Ticket, error) {
+	return d.FakeTicketSliceStruct.FakeTicketSlice, d.FakeTicketSliceStruct.FakeTicketSlice, d.FakeTicketSliceStruct.FakeError
 }
 
 var expectedDB = mockDB{

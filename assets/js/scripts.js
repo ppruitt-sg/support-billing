@@ -45,21 +45,4 @@ function focusParent(elem) {
     elem.parentElement.classList.add('is-focused');
 }
 
-// Adds text when value is selected
-
-const issueSelector = document.getElementById("issue-input");
-const commentTextField = document.getElementById("comment-input");
-const addCommentText = "## Please add more comments ##"
-
-function addText() {
-  const selectedIssue = issueSelector.options[issueSelector.selectedIndex].text;
-  if (selectedIssue === "Legacy Contacts") {
-      commentTextField.value = "Legacy - ".concat(addCommentText);
-      focusParent(commentTextField);
-  } else if (selectedIssue === "TNE Contacts") {
-    commentTextField.value = "TNE - ".concat(addCommentText);
-    focusParent(commentTextField);
-}
-}
-
 

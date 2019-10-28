@@ -14,7 +14,7 @@ const queryMCTickets = `SELECT t.userid, c.text
 	FROM tickets t
 	INNER JOIN
 	comments c ON t.ticket_id = c.ticket_id
-	WHERE t.issue=4
+	WHERE t.issue=?
 	AND t.submitted >= ?
 	AND t.submitted < ?`
 
@@ -144,24 +144,44 @@ func (d *DB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueTy
 	return ts, nil
 }
 
-func (d *DB) GetMCTickets(startTime int64, endTime int64) (ts []Ticket, err error) {
+func (d *DB) GetMCTickets(startTime int64, endTime int64) (legacyTickets []Ticket, tneTickets []Ticket, err error) {
 	t := Ticket{}
-	r, err := d.Query(queryMCTickets, startTime, endTime)
+
+	// Get Legacy Tickets from DB
+	r, err := d.Query(queryMCTickets, LegacyContacts, startTime, endTime)
 	if err != nil {
-		return ts, err
+		return legacyTickets, tneTickets, err
 	}
 
 	// Add ticket userID and ticket Comment text
 	for r.Next() {
 		err = r.Scan(&t.UserID, &t.Comment.Text)
 		if err != nil {
-			return ts, err
+			return legacyTickets, tneTickets, err
 		}
-		ts = append(ts, t)
+		legacyTickets = append(legacyTickets, t)
 	}
 	if r.Err() != nil {
-		return ts, err
+		return legacyTickets, tneTickets, err
 	}
 
-	return ts, nil
+	// Get TNE Tickets from DB
+	r, err = d.Query(queryMCTickets, TNEContacts, startTime, endTime)
+	if err != nil {
+		return legacyTickets, tneTickets, err
+	}
+
+	// Add ticket userID and ticket Comment text
+	for r.Next() {
+		err = r.Scan(&t.UserID, &t.Comment.Text)
+		if err != nil {
+			return legacyTickets, tneTickets, err
+		}
+		tneTickets = append(tneTickets, t)
+	}
+	if r.Err() != nil {
+		return legacyTickets, tneTickets, err
+	}
+
+	return legacyTickets, tneTickets, nil
 }
