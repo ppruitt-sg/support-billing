@@ -353,8 +353,6 @@ func Admin(d database.Datastore) func(w http.ResponseWriter, r *http.Request) {
 			tneTickets,
 		}
 
-		fmt.Println(mcTickets.LegacyTickets)
-		fmt.Println(mcTickets.TNETickets)
 		view.Render(w, "admin.gohtml", mcTickets)
 	}
 }

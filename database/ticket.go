@@ -10,13 +10,11 @@ import (
 	. "github.com/ppruitt-sg/support-billing/structs"
 )
 
-const queryMCTickets = `SELECT t.userid, c.text 
-	FROM tickets t
-	INNER JOIN
-	comments c ON t.ticket_id = c.ticket_id
-	WHERE t.issue=?
-	AND t.submitted >= ?
-	AND t.submitted < ?`
+const queryMCTickets = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted 
+	FROM tickets
+	WHERE issue=?
+	AND submitted >= ?
+	AND submitted < ?`
 
 const querySelectTicket = `SELECT ticket_id, zdticket, userid, issue, initials, status, submitted FROM tickets
 	WHERE ticket_id=?`
@@ -145,7 +143,6 @@ func (d *DB) GetNext10Tickets(offset int64, status StatusType, issues ...IssueTy
 }
 
 func (d *DB) GetMCTickets(startTime int64, endTime int64) (legacyTickets []Ticket, tneTickets []Ticket, err error) {
-	t := Ticket{}
 
 	// Get Legacy Tickets from DB
 	r, err := d.Query(queryMCTickets, LegacyContacts, startTime, endTime)
@@ -154,13 +151,18 @@ func (d *DB) GetMCTickets(startTime int64, endTime int64) (legacyTickets []Ticke
 	}
 
 	// Add ticket userID and ticket Comment text
-	for r.Next() {
-		err = r.Scan(&t.UserID, &t.Comment.Text)
-		if err != nil {
-			return legacyTickets, tneTickets, err
-		}
-		legacyTickets = append(legacyTickets, t)
-	}
+	// for r.Next() {
+	// 	err = r.Scan(&t.UserID, &t.Comment.Text)
+	// 	if err != nil {
+	// 		return legacyTickets, tneTickets, err
+	// 	}
+	// 	legacyTickets = append(legacyTickets, t)
+	// }
+	// if r.Err() != nil {
+	// 	return legacyTickets, tneTickets, err
+	// }
+
+	legacyTickets, err = d.getTicketsFromRows(r)
 	if r.Err() != nil {
 		return legacyTickets, tneTickets, err
 	}
@@ -171,14 +173,7 @@ func (d *DB) GetMCTickets(startTime int64, endTime int64) (legacyTickets []Ticke
 		return legacyTickets, tneTickets, err
 	}
 
-	// Add ticket userID and ticket Comment text
-	for r.Next() {
-		err = r.Scan(&t.UserID, &t.Comment.Text)
-		if err != nil {
-			return legacyTickets, tneTickets, err
-		}
-		tneTickets = append(tneTickets, t)
-	}
+	tneTickets, err = d.getTicketsFromRows(r)
 	if r.Err() != nil {
 		return legacyTickets, tneTickets, err
 	}
