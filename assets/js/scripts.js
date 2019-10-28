@@ -41,6 +41,12 @@ $(document).on('change','#issue-input',function(){
 
 // Make fields focused
 
+document.addEventListener('keyup', function (event) {
+	if (event.keyCode===9) {
+		focusParent(event.srcElement)
+	}
+});
+
 function focusParent(elem) {
     elem.parentElement.classList.add('is-focused');
 }
