@@ -33,7 +33,13 @@
             </tr>
             <tr>
                 <td><strong>Zendesk Ticket</strong></td>
-                <td><span class="mono"><a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDTicket}}" target="_blank">{{.ZDTicket}}</a></span></td>
+                <td>
+                    {{.ZDTicket}}
+                    <br>
+                    <span class="mono"><a href="https://twilio.zendesk.com/agent/tickets/{{.ZDTicket}}" target="_blank">Twilio Instance</a></span>
+                    <br>
+                    <span class="mono"><a href="https://sendgrid.zendesk.com/agent/tickets/{{.ZDTicket}}" target="_blank">SendGrid Instance</a></span>
+                </td>
             </tr>
             <tr>
                 <td><strong>Issue Type</strong></td>
