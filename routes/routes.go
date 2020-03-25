@@ -157,8 +157,6 @@ func Retrieve10(d database.Datastore, status StatusType, issues ...IssueType) fu
 				logError(fmt.Sprintf("Converting page parameter %s", parameter), err, w)
 				return
 			}
-		} else {
-			solvedTicket = 0
 		}
 
 		// Get offset value based off page number
@@ -360,4 +358,30 @@ func Admin(d database.Datastore) func(w http.ResponseWriter, r *http.Request) {
 func NotFound(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	view.Render(w, "404.gohtml", nil)
+}
+
+func Export(d database.Datastore) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Write header
+		w.Write([]byte("ticketNumber,submitted,zendeskTicket,userID,issue,initials,status\n"))
+		// Get information from database
+		tickets, err := d.Export()
+		if err != nil {
+			logError("Error exporting DB: ", err, w)
+		}
+
+		// For each row
+		for _, ticket := range tickets {
+			// Display the data in a comma sepearated line and output
+			fmt.Fprintf(w, "%d,%s,%d,%d,%s,%s,%s\n",
+				ticket.Number,
+				ticket.Submitted,
+				ticket.ZDTicket,
+				ticket.UserID,
+				ticket.Issue,
+				ticket.Initials,
+				ticket.Status)
+		}
+
+	}
 }

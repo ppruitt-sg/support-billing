@@ -41,6 +41,11 @@ const querySelect10Closed = `SELECT ticket_id, zdticket, userid, issue, initials
 	ORDER BY ticket_id DESC
 	LIMIT ?, 10`
 
+const querySelectAll = `SELECT t.ticket_id, t.zdticket, t.userid, t.issue, t.initials, t.status, t.submitted, c.text
+	FROM tickets AS t
+	INNER JOIN comments AS c 
+	ON t.ticket_id = c.ticket_id`
+
 func (d *DB) getTicketsFromRows(r *sql.Rows) (ts []Ticket, err error) {
 	t := Ticket{}
 	var timestamp int64
@@ -150,18 +155,6 @@ func (d *DB) GetMCTickets(startTime int64, endTime int64) (legacyTickets []Ticke
 		return legacyTickets, tneTickets, err
 	}
 
-	// Add ticket userID and ticket Comment text
-	// for r.Next() {
-	// 	err = r.Scan(&t.UserID, &t.Comment.Text)
-	// 	if err != nil {
-	// 		return legacyTickets, tneTickets, err
-	// 	}
-	// 	legacyTickets = append(legacyTickets, t)
-	// }
-	// if r.Err() != nil {
-	// 	return legacyTickets, tneTickets, err
-	// }
-
 	legacyTickets, err = d.getTicketsFromRows(r)
 	if r.Err() != nil {
 		return legacyTickets, tneTickets, err
@@ -179,4 +172,29 @@ func (d *DB) GetMCTickets(startTime int64, endTime int64) (legacyTickets []Ticke
 	}
 
 	return legacyTickets, tneTickets, nil
+}
+
+func (d *DB) Export() (tickets []Ticket, err error) {
+	r, err := d.Query(querySelectAll)
+	if err != nil {
+		return tickets, err
+	}
+
+	// Parse rows and set up on tickets
+	var timestamp int64
+	t := Ticket{}
+	for r.Next() {
+		err = r.Scan(&t.Number, &t.ZDTicket, &t.UserID, &t.Issue, &t.Initials, &t.Status, &timestamp, &t.Comment.Text)
+		if err != nil {
+			return tickets, err
+		}
+		// Convert int64 to time.Time
+		t.Submitted = time.Unix(timestamp, 0)
+		tickets = append(tickets, t)
+	}
+	if r.Err() != nil {
+		return tickets, err
+	}
+	return tickets, nil
+
 }

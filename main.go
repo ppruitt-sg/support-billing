@@ -53,6 +53,7 @@ func main() {
 	r.HandleFunc("/update/{number:[0-9]+}", routes.Update(&db)).Methods("POST")
 	r.HandleFunc("/solve/{number:[0-9]+}", routes.Solve(&db)).Methods("POST")
 	r.HandleFunc("/admin", routes.Admin(&db)).Methods("GET")
+	r.HandleFunc("/db/export", routes.Export(&db)).Methods("GET")
 
 	r.NotFoundHandler = http.HandlerFunc(routes.NotFound)
 

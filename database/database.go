@@ -21,6 +21,7 @@ type Datastore interface {
 	GetTicket(int64) (Ticket, error)
 	GetNext10Tickets(int64, StatusType, ...IssueType) ([]Ticket, error)
 	GetMCTickets(int64, int64) ([]Ticket, []Ticket, error)
+	Export() ([]Ticket, error)
 }
 
 func (d *DB) NewDB(dataSourceName string) (err error) {
